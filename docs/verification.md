@@ -29,3 +29,13 @@
 浏览器工具的 URL 策略禁止打开本地 `file:` 页面，因此本次没有视觉检查或重新确认布局、交互、SVG 导出。技能资源与执行内容保持原样；产物迁移验证仅覆盖生成结果、输入一致性和资源完整性。
 
 GitHub Actions 工作流已经配置依赖安装、仓库检查、项目链接检查和两个平台严格校验；尚未在远端执行。本地未执行市场注册、持久安装、远程推送或发布。
+
+## README 组织调整复验
+
+日期：2026-11-21（Asia/Shanghai）。按上游 README 的顺序调整简介、安装入口、使用场景和按领域及调用方式分组的技能索引，并补充统一安装文档；技能内容、运行资源、发现链接和插件清单未变。
+
+- `npm run check` 通过，包含结构检查及 5 项既有 Python 测试。
+- 两条 `claude plugin validate ... --strict` 命令均通过，无错误或警告；CLI 仍建议在 README 中直接放安装命令。本仓库按维护约定将命令集中在 `docs/installation.md`，README 链接到该文档。
+- 使用临时 `CODEX_HOME`，从仓库外执行本地市场添加、`codex plugin add iibobo-skills@iibobo` 和插件列表查询，均返回成功；安装版本为 `0.1.0`，状态为 `installed=true`、`enabled=true`。临时配置与缓存随验证目录清理，没有修改用户的持久插件配置。
+- `claude --plugin-dir "$PWD" plugin details iibobo-skills` 再次列出 1 个技能 `render-class-diagrams`。
+- 新补充的安装及更新语法已对照 Codex CLI 0.162.0、Claude Code 2.1.295 帮助核对。GitHub 安装和更新未实际执行；完整模型调用、非正式技能隔离与浏览器交互未重复测试，沿用上文记录的验证边界。
