@@ -1,0 +1,9 @@
+**/target/
+.env
+.idea/
+*.iml
+.DS_Store
+.mvn/apache-maven-*/
+**/__pycache__/
+logs/
+.agents/skills/render-class-diagrams
