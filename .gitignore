@@ -6,4 +6,4 @@
 .mvn/apache-maven-*/
 **/__pycache__/
 logs/
-.agents/skills/render-class-diagrams
+node_modules/

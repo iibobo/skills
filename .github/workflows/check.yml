@@ -1,0 +1,29 @@
+name: Check skills plugin
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run check
+      - name: Check project discovery link
+        run: test "$(realpath .agents/skills/render-class-diagrams)" = "$(realpath skills/engineering/render-class-diagrams)"
+      - name: Install platform validator
+        run: npm install --global @anthropic-ai/claude-code@2.1.295
+      - run: claude plugin validate . --strict
+      - run: claude plugin validate .claude-plugin/plugin.json --strict

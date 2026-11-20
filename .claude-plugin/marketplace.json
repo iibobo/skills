@@ -1,0 +1,12 @@
+{
+  "name": "iibobo",
+  "description": "iibobo 维护的工程技能插件市场。",
+  "owner": { "name": "iibobo" },
+  "plugins": [
+    {
+      "name": "iibobo-skills",
+      "source": "./",
+      "description": "可复用的工程技能，包含可移植的离线 Mermaid 类图工作流。"
+    }
+  ]
+}
