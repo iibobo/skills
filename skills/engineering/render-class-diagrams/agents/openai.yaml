@@ -1,4 +1,4 @@
 interface:
   display_name: "绘制可移植类图"
   short_description: "内置模板与离线资源，在任意项目复用类型配色、关系标注和交互类图"
-  default_prompt: "使用 $render-class-diagrams 为指定模块绘制类图，沿用技能内置规范并生成可独立迁移的离线页面。"
+  default_prompt: "使用 $render-class-diagrams 为指定模块绘制类图，沿用技能内置规范并生成可独立迁移的离线页面，默认为类和展示方法创建源码跳转映射并检查完整覆盖。"
