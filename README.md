@@ -1,10 +1,22 @@
 # iibobo skills
 
-可复用的 Agent 技能集合，把工程任务中的操作步骤、检查标准和运行资源放在一起。目前包含一个技能：绘制或修改 Mermaid 类与接口关系图，生成可迁移的离线 HTML，并可配置源码导航。
+可复用的 Agent 技能集合，把工程任务中的操作步骤、检查标准和运行资源放在一起。目前包含一个技能：绘制或修改 Mermaid 类与接口关系图，生成可迁移的离线 HTML，默认为类和方法创建源码跳转入口。
+
+配合 IntelliJ IDEA 插件 **Diagram Source Navigator**，可点击类图中的类名或方法，直接跳转到 IDEA 中对应的 Java 类或方法声明。安装插件后，通过 IDEA 的 **Tools → Open Class Diagram with Source Navigation…** 打开生成的 HTML；目标项目需已导入对应源码或依赖。具体见[使用说明](docs/engineering/render-class-diagrams.md)。
 
 每个技能都可以独立安装和使用，也可以通过 `iibobo-skills` 插件一起分发。
 
 仓库内的 `iibobo` 是自建插件市场的名称。将插件文件推送到可访问的 GitHub 仓库后，其他用户可添加该仓库作为市场来源并安装插件；上架 ChatGPT / Codex 公共插件目录还需按[官方流程](https://developers.openai.com/plugins/deploy/submission)单独提交审核。
+
+## 源码跳转演示
+
+**IDEA 插件：Diagram Source Navigator**
+
+<img src="docs/images/diagram-source-navigator.jpg" alt="JetBrains Marketplace 中的 Diagram Source Navigator 插件" width="640">
+
+**操作演示：打开类图，点击类名或方法跳转到 IDEA 源码。**
+
+![使用 Diagram Source Navigator 从 Mermaid 类图跳转到 IDEA 中的 Java 类和方法](docs/images/idea-source-navigation.gif)
 
 ## 安装与开始使用
 
@@ -20,7 +32,7 @@
 
 ### 读源码时难以看清类型关系
 
-类图工作流要求先核对真实声明，再整理类型职责、核心方法、继承与实现关系。适合梳理模块结构、阅读依赖库和讲解设计。可选的源码导航需要提供符号映射，并配置相应的 IDE 接收环境，具体见[使用说明](docs/engineering/render-class-diagrams.md)。
+类图工作流要求先核对真实声明，再整理类型职责、核心方法、继承与实现关系，并默认生成源码导航所需的符号映射。配合 Diagram Source Navigator，可从图中跳转到 Java 类和方法，适合梳理模块结构、阅读依赖库和讲解设计。具体见[使用说明](docs/engineering/render-class-diagrams.md)。
 
 ### 图能生成，却难以搬移和复用
 
@@ -36,7 +48,7 @@
 
 #### Model-invoked
 
-- [render-class-diagrams](skills/engineering/render-class-diagrams/SKILL.md)：绘制类与接口关系图，生成离线 HTML，支持 SVG 导出和可选的源码导航；[使用说明](docs/engineering/render-class-diagrams.md)。
+- [render-class-diagrams](skills/engineering/render-class-diagrams/SKILL.md)：绘制类与接口关系图，生成离线 HTML，支持 SVG 导出，默认创建类与方法的源码跳转入口；[使用说明](docs/engineering/render-class-diagrams.md)。
 
 ## 仓库维护
 
