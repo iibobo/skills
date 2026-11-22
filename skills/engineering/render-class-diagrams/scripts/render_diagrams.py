@@ -45,7 +45,8 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         raise ValueError('Output must be outside the skill directory.')
     if output == source:
         raise ValueError('HTML output must differ from Markdown source.')
-    resource_dir = output.with_name(output.stem + '.assets')
+    module_dir = output.parent / 'class-diagrams'
+    resource_dir = module_dir / (output.stem + '.assets')
     if not overwrite and (output.exists() or resource_dir.exists()):
         raise ValueError(f'Output or resources already exist: {output}; use --overwrite.')
     required = ('viewer.html',) + RUNTIME_FILES
@@ -59,8 +60,9 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         title = match[1] if match else source.stem
     content = (ASSETS / 'viewer.html').read_text(encoding='utf-8')
     content = replace_once(r'<title>.*?</title>', '<title>' + html.escape(title) + '</title>', content)
-    resource_url = quote(resource_dir.name, safe='')
-    link = html.escape(resource_url + '/source.md', quote=True)
+    resource_url = quote(resource_dir.relative_to(output.parent).as_posix(), safe='/')
+    source_url = quote(source.relative_to(output.parent).as_posix(), safe='/') if source.parent == module_dir else resource_url + '/source.md'
+    link = html.escape(source_url, quote=True)
     header = f'<div class="header-copy"><h1>{html.escape(title)}</h1><p>{html.escape(subtitle)} <a href="{link}">阅读完整指南</a></p></div>'
     content = replace_once(r'<div class="header-copy">.*?</div>', header, content)
     data = json.dumps(diagrams, ensure_ascii=False).replace('<', '\\u003c')
@@ -96,7 +98,7 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
                 raise ValueError(f'Source line exceeds file length: {origin}')
             name = hashlib.sha256(str(origin).encode()).hexdigest()[:12] + '-' + origin.name
             source_files[name] = origin
-            value['file'] = resource_dir.name + '/sources/' + name
+            value['file'] = resource_dir.relative_to(output.parent).as_posix() + '/sources/' + name
         elif not symbolic:
             raise ValueError('Source locations require className or file/line.')
     for key, entry in mapping.items():
@@ -131,7 +133,7 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
     content = replace_once(r'<script id="source-map" type="application/json">.*?</script>',
                           '<script id="source-map" type="application/json">' + mapping_json + '</script>', content)
     output.parent.mkdir(parents=True, exist_ok=True)
-    resource_dir.mkdir(exist_ok=True)
+    resource_dir.mkdir(parents=True, exist_ok=True)
     files = list(RUNTIME_FILES)
     if (ASSETS / 'mermaid-third-party-LICENSE.txt').is_file():
         files.append('mermaid-third-party-LICENSE.txt')
@@ -149,7 +151,7 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path, help='Markdown containing Mermaid class diagrams')
-    parser.add_argument('--output', type=Path, help='Default: same filename with .html extension')
+    parser.add_argument('--output', type=Path, help='Default: top-level HTML in the diagram output directory')
     parser.add_argument('--title', help='Default: Markdown H1')
     parser.add_argument('--subtitle', default='类与接口关系图 · 主要职责与核心方法')
     parser.add_argument('--source-map', type=Path, help='JSON symbolic class/method targets or optional local file/line locations')
@@ -158,12 +160,13 @@ def main():
     args = parser.parse_args()
     try:
         source = args.source.resolve()
-        output = (args.output or source.with_suffix('.html')).resolve()
+        output_root = source.parent.parent if source.parent.name == 'class-diagrams' else source.parent
+        output = (args.output or output_root / source.with_suffix('.html').name).resolve()
         count = generate(source, output, args.title, args.subtitle, args.overwrite, args.source_map, args.require_source_links)
     except (ValueError, OSError, TypeError) as error:
         parser.exit(1, f'Error: {error}\n')
     print(f'Generated {output} ({count} class diagrams).')
-    print(f'Offline resources: {output.stem}.assets/; keep this folder beside the HTML.')
+    print(f'Offline resources: class-diagrams/{output.stem}.assets/; keep the relative layout.')
 
 
 if __name__ == '__main__':

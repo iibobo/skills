@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ASSETS = SKILL_ROOT / 'assets'
-RUNTIME_FILES = ('mermaid-12.3.0.min.js', 'mermaid-LICENSE', 'diagram-navigation.js')
+RUNTIME_FILES = ('mermaid-12.3.0.min.js', 'mermaid-LICENSE', 'diagram-navigation.js', 'flowchart-edges.js')
 
 
 def extract_diagrams(markdown):
@@ -28,7 +28,8 @@ def extract_diagrams(markdown):
 
 def generate(source, output, title=None, overwrite=False):
     source, output = Path(source).resolve(), Path(output).resolve()
-    resources = output.with_name(output.stem + '.assets')
+    module_dir = output.parent / 'flowcharts'
+    resources = module_dir / (output.stem + '.assets')
     if output == source or output.is_relative_to(SKILL_ROOT) or output.suffix.lower() != '.html':
         raise ValueError('Use an .html output outside the skill directory, distinct from the source.')
     if source.is_relative_to(resources):
@@ -43,15 +44,17 @@ def generate(source, output, title=None, overwrite=False):
     heading = re.search(r'^#[ \t]+(.+?)\s*$', markdown, re.M)
     title = title or (heading[1] if heading else source.stem)
     content = (ASSETS / 'viewer.html').read_text(encoding='utf-8')
+    source_link = source if source.parent == module_dir else resources / 'source.md'
     replacements = {
+        '@@SOURCE@@': html.escape(quote(source_link.relative_to(output.parent).as_posix(), safe='/'), quote=True),
         '@@TITLE@@': html.escape(title),
-        '@@ASSETS@@': html.escape(quote(resources.name, safe=''), quote=True),
+        '@@ASSETS@@': html.escape(quote(resources.relative_to(output.parent).as_posix(), safe='/'), quote=True),
         '@@DIAGRAMS@@': json.dumps(diagrams, ensure_ascii=False).replace('<', '\\u003c'),
     }
     # One substitution pass prevents user text from being treated as template tokens.
-    content = re.sub(r'@@(?:TITLE|ASSETS|DIAGRAMS)@@', lambda m: replacements[m[0]], content)
+    content = re.sub(r'@@(?:TITLE|ASSETS|SOURCE|DIAGRAMS)@@', lambda m: replacements[m[0]], content)
     output.parent.mkdir(parents=True, exist_ok=True)
-    resources.mkdir(exist_ok=True)
+    resources.mkdir(parents=True, exist_ok=True)
     for name in RUNTIME_FILES:
         shutil.copyfile(ASSETS / name, resources / name)
     (resources / 'source.md').write_text(markdown, encoding='utf-8')
@@ -67,12 +70,14 @@ def main():
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     try:
-        output = args.output or args.source.with_suffix('.html')
+        source = args.source.resolve()
+        output_root = source.parent.parent if source.parent.name == 'flowcharts' else source.parent
+        output = (args.output or output_root / source.with_suffix('.html').name).resolve()
         count = generate(args.source, output, args.title, args.overwrite)
     except (ValueError, OSError) as error:
         parser.exit(1, f'Error: {error}\n')
     print(f'Generated {output.resolve()} ({count} flowcharts).')
-    print(f'Keep {output.stem}.assets/ beside the HTML for offline viewing.')
+    print(f'Offline resources: flowcharts/{output.stem}.assets/; keep the relative layout.')
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ class SequenceRendererTest(unittest.TestCase):
         page = self.output.read_text()
         data = json.loads(re.search(r'id="diagram-data" type="application/json">(.*?)</script>', page, re.S)[1])
         self.assertEqual(data, renderer.extract_diagrams(markdown))
-        self.assertEqual((self.output.parent / 'flows.assets/source.md').read_text(), markdown)
+        self.assertEqual((self.output.parent / 'sequence-diagrams/flows.assets/source.md').read_text(), markdown)
 
     def test_no_diagrams_rejects_before_writing(self):
         self.source.write_text('# Not a sequence\n```mermaid\nclassDiagram\n class A\n```\n')
@@ -66,10 +66,10 @@ class SequenceRendererTest(unittest.TestCase):
         shutil.move(str(self.output.parent), moved)
         self.source.unlink()
         page = (moved / 'flows.html').read_text()
-        for link in re.findall(r'(?:src|href)="(flows.assets/[^"]+)"', page):
+        for link in re.findall(r'(?:src|href)="(sequence-diagrams/flows.assets/[^"]+)"', page):
             self.assertTrue((moved / link).is_file(), link)
         self.assertNotIn(str(renderer.SKILL_ROOT), page)
-        self.assertEqual((moved / 'flows.assets/mermaid-12.3.0.min.js').read_bytes(), (renderer.ASSETS / 'mermaid-12.3.0.min.js').read_bytes())
+        self.assertEqual((moved / 'sequence-diagrams/flows.assets/mermaid-12.3.0.min.js').read_bytes(), (renderer.ASSETS / 'mermaid-12.3.0.min.js').read_bytes())
 
 
 def load_tests(loader, tests, pattern):

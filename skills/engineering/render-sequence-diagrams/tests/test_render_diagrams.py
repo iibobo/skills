@@ -24,8 +24,8 @@ class RendererTests(unittest.TestCase):
             first = output.read_bytes()
             render.generate(md, output, overwrite=True)
             self.assertEqual(first, output.read_bytes())
-            self.assertEqual(md.read_bytes(), (root / 'demo.assets/source.md').read_bytes())
-            self.assertEqual(mapping, json.loads((root / 'demo.assets/map.json').read_text()))
+            self.assertEqual(md.read_bytes(), (root / 'sequence-diagrams/demo.assets/source.md').read_bytes())
+            self.assertEqual(mapping, json.loads((root / 'sequence-diagrams/demo.assets/map.json').read_text()))
             self.assertIn('zoom=0.71', output.read_text())
             # A changed call cannot silently reuse the previous target.
             md.write_text(md.read_text().replace('A->>A: call()', 'A->>A: other()'))

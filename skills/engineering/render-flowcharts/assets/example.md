@@ -1,26 +1,24 @@
-# 订单流程示例
+# 基础流程图模板
 
-以下是概念设计，仅演示流程图的判断、回边和子流程，不代表某个项目已实现的行为。库存并发、支付幂等和取消处理未纳入本示例。
+复制此文件，保留需要的 Mermaid 图块，再替换标题、动作、分支条件和结果。第一个图块适合单入口的业务流程，第二个可用于有退出条件的重试。订单与通知场景均为概念示例。
 
 ## 提交订单：校验与失败分支
 
 ```mermaid
 flowchart TB
-    Start(["开始：提交订单"]) --> Validate["校验商品与数量"]
+    Start(["开始"]) --> Input[/"接收订单数据"/]
+    Input --> Validate["校验商品与数量"]
     Validate --> Valid{"参数有效？"}
-    Valid -->|否| Invalid(["结束：返回参数错误"])
-    Valid -->|是| Stock{"库存充足？"}
-    Stock -->|否| Unavailable(["结束：返回缺货提示"])
-    Stock -->|是| Save["保存订单"]
-    Save --> Saved{"保存成功？"}
-    Saved -->|否| Failed(["结束：返回保存失败"])
-    Saved -->|是| Success(["结束：返回订单编号"])
+    Valid -->|是| Save["保存订单"]
+    Valid -->|否| Invalid(["订单数据无效"])
+    Save --> Output[/"返回订单编号"/]
+    Output --> Success(["订单已提交"])
     classDef success fill:#dcfce7,stroke:#42815a,color:#173a25
     classDef failure fill:#fee2e2,stroke:#b86a6a,color:#622525
     classDef decision fill:#fff4cc,stroke:#ae9342,color:#443912
     class Success success
-    class Invalid,Unavailable,Failed failure
-    class Valid,Stock,Saved decision
+    class Invalid failure
+    class Valid decision
 ```
 
 ## 通知投递：有界重试与子流程
@@ -38,4 +36,10 @@ flowchart LR
     end
     Sent -->|是| Done(["结束：已通知"])
     Retry -->|否| Manual(["结束：记录失败并转人工"])
+    classDef success fill:#dcfce7,stroke:#42815a,color:#173a25
+    classDef failure fill:#fee2e2,stroke:#b86a6a,color:#622525
+    classDef decision fill:#fff4cc,stroke:#ae9342,color:#443912
+    class Done success
+    class Manual failure
+    class Sent,Retry decision
 ```

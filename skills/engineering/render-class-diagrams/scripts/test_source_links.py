@@ -32,8 +32,8 @@ class SourceLinksTest(unittest.TestCase):
         self.assertEqual(self.generate(), 1)
         page = (self.root / 'out.html').read_text()
         self.assertIn('example.Request', page)
-        self.assertFalse((self.root / 'out.assets/sources').exists())
-        self.assertEqual((self.root / 'out.assets/source.md').read_text(), self.source.read_text())
+        self.assertFalse((self.root / 'class-diagrams/out.assets/sources').exists())
+        self.assertEqual((self.root / 'class-diagrams/out.assets/source.md').read_text(), self.source.read_text())
 
     def test_missing_method_fails_before_creating_output(self):
         self.data['Worker']['methods'] = {}

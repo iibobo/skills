@@ -10,7 +10,7 @@
 | `assets/example.md` | 独立的双图示例，演示类型、关系和配色写法 |
 | `assets/class-diagram-layout.js` | 同层顶部对齐及连线端点调整 |
 | `assets/mermaid-12.3.0.min.js`、`assets/mermaid-LICENSE` | 固定版本的本地渲染库与许可证 |
-| `scripts/render_diagrams.py` | Markdown → HTML 及相邻资源目录生成器，仅使用 Python 3.9+ 标准库 |
+| `scripts/render_diagrams.py` | Markdown → 顶层 HTML 及模块资源目录生成器，仅使用 Python 3.9+ 标准库 |
 
 新主题复用技能内模板及资源；技能放在任何目录均可执行，不读取调用项目的模板、配置或依赖缓存。修改默认视觉和交互时维护技能内资源，已有生成页面需按要求重新生成或单独同步。
 
@@ -99,7 +99,7 @@ classDiagram
 
 ## 交付和验证
 
-按用户指定目录交付 `<topic>.md`、`<topic>.html` 和 `<topic>.assets/`；默认在 Markdown 同目录生成。资源目录包含运行库、布局脚本、许可证及 `source.md` 快照，HTML 仅使用这些相对路径。分享时保留 HTML 和对应资源目录，不需要技能目录或原始项目。Markdown 中若另有外部文档链接，应按交付范围一起整理。
+将 `<topic>.html` 放在交付目录顶层，Markdown 归入 `class-diagrams/` 并同目录维护符号映射。运行资源放入 `class-diagrams/<topic>.assets/`。资源目录包含运行库、布局脚本、许可证及 `source.md` 快照，HTML 仅使用这些相对路径。分享时保留顶层 HTML 和完整的 `class-diagrams/` 模块目录，不需要技能目录或原始项目。Markdown 中若另有外部文档链接，应按交付范围一起整理。
 
 从任意工作目录执行：
 

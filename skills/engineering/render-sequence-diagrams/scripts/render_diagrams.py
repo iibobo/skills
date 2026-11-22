@@ -66,7 +66,8 @@ def validate_mapping(diagrams, mapping, required):
 
 def generate(source, output, title=None, overwrite=False, source_map=None, require_source_links=False):
     source, output = Path(source).resolve(), Path(output).resolve()
-    resources = output.with_name(output.stem + '.assets')
+    module_dir = output.parent / 'sequence-diagrams'
+    resources = module_dir / (output.stem + '.assets')
     if output == source or output.is_relative_to(SKILL_ROOT) or output.suffix.lower() != '.html':
         raise ValueError('Use an .html output outside the skill directory, distinct from the source.')
     if source.is_relative_to(resources):
@@ -92,18 +93,20 @@ def generate(source, output, title=None, overwrite=False, source_map=None, requi
     mapping = json.loads(Path(source_map).read_text(encoding='utf-8')) if source_map else {}
     symbols, scenes = validate_mapping(diagrams, mapping, require_source_links)
     encode = lambda value: json.dumps(value, ensure_ascii=False).replace('<', chr(92) + 'u003c')
+    source_link = source if source.parent == module_dir else resources / 'source.md'
     replacements = {
+        '@@SOURCE@@': html.escape(quote(source_link.relative_to(output.parent).as_posix(), safe='/'), quote=True),
         '@@SOURCE_MAP@@': encode(symbols),
         '@@SEQUENCE_LINKS@@': encode(scenes),
         '@@INITIAL_ZOOM@@': str(initial_zoom),
         '@@TITLE@@': html.escape(title),
-        '@@ASSETS@@': html.escape(quote(resources.name, safe=''), quote=True),
+        '@@ASSETS@@': html.escape(quote(resources.relative_to(output.parent).as_posix(), safe='/'), quote=True),
         '@@DIAGRAMS@@': json.dumps(diagrams, ensure_ascii=False).replace('<', chr(92) + 'u003c'),
     }
     # One substitution pass prevents user text from being treated as template tokens.
-    content = re.sub(r'@@(?:TITLE|ASSETS|DIAGRAMS|INITIAL_ZOOM|SOURCE_MAP|SEQUENCE_LINKS)@@', lambda m: replacements[m[0]], content)
+    content = re.sub(r'@@(?:TITLE|ASSETS|SOURCE|DIAGRAMS|INITIAL_ZOOM|SOURCE_MAP|SEQUENCE_LINKS)@@', lambda m: replacements[m[0]], content)
     output.parent.mkdir(parents=True, exist_ok=True)
-    resources.mkdir(exist_ok=True)
+    resources.mkdir(parents=True, exist_ok=True)
     for name in RUNTIME_FILES:
         shutil.copyfile(ASSETS / name, resources / name)
     if source_map:
@@ -123,12 +126,14 @@ def main():
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     try:
-        output = args.output or args.source.with_suffix('.html')
+        source = args.source.resolve()
+        output_root = source.parent.parent if source.parent.name == 'sequence-diagrams' else source.parent
+        output = (args.output or output_root / source.with_suffix('.html').name).resolve()
         count = generate(args.source, output, args.title, args.overwrite, args.source_map, args.require_source_links)
     except (ValueError, OSError) as error:
         parser.exit(1, f'Error: {error}\n')
     print(f'Generated {output.resolve()} ({count} sequence diagrams).')
-    print(f'Keep {output.stem}.assets/ beside the HTML for offline viewing.')
+    print(f'Offline resources: sequence-diagrams/{output.stem}.assets/; keep the relative layout.')
 
 
 if __name__ == '__main__':

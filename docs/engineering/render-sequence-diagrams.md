@@ -2,7 +2,7 @@
 
 ## What it does
 
-绘制或修改 Mermaid 时序图，说明参与者之间的调用顺序、返回、异步消息、分支、循环及并行处理。输出 Markdown、可离线查看的 HTML 和相邻资源目录，页面支持多图切换、缩放、适应整图及 SVG 导出。
+绘制或修改 Mermaid 时序图，说明参与者之间的调用顺序、返回、异步消息、分支、循环及并行处理。输出 Markdown、可离线查看的 HTML 和模块资源目录，页面支持多图切换、缩放、适应整图及 SVG 导出。
 
 ## When to reach for it
 
@@ -15,7 +15,7 @@
 - **如何调用？** Codex 插件中使用 `$iibobo-skills:render-sequence-diagrams`，独立安装时使用 `$render-sequence-diagrams`；Claude Code 插件中使用 `/iibobo-skills:render-sequence-diagrams`。安装和更新见[安装文档](../installation.md)。
 - **怎样描述任务？** 例如：“根据当前订单接口源码画创建订单的时序图，包含校验失败和异步通知，输出离线 HTML。”
 - **能否只要 Mermaid？** 可以，明确要求片段或 Markdown 即可。
-- **如何搬移？** 同时复制 `.html` 与同名 `.assets/` 目录。示例和运行资源均在技能内，单独复制技能也可生成。
+- **如何搬移？** 同时复制顶层 `.html` 与 `sequence-diagrams/` 模块目录。示例和运行资源均在技能内，单独复制技能也可生成。
 - **支持 IDEA 源码跳转吗？** 支持新版 Diagram Source Navigator。参与者上下两端与消息中的真实方法均可跳转，链式调用独立链接；映射包含完整类名、精确签名与原文哈希，变更源码后须同步映射。IDE 未导入依赖会 not_found，同名多模块类需要明确选择候选；只有 opened 才计成功。
 
 ## It's working if

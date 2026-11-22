@@ -2,7 +2,7 @@
 
 ## What it does
 
-绘制或修改 Mermaid 流程图，表达处理步骤、条件判断、分支、循环、异常和子流程。输出 Markdown、可离线查看的 HTML 与相邻资源目录；页面支持多图切换、缩放、适应宽度及 SVG 导出。
+绘制或修改 Mermaid 流程图，表达处理步骤、条件判断、分支、循环、异常和子流程。输出 Markdown、可离线查看的 HTML 与模块资源目录；页面沿用类图和时序图的紧凑布局，支持多图切换、工具栏折叠、适应画布、Shift + 滚轮缩放、鼠标拖动画布、全屏和 SVG 导出。
 
 ## When to reach for it
 
@@ -12,11 +12,13 @@
 
 ## Common questions
 
+- **需要先排布局吗？** 简单图直接起稿，出现多级判断、回边或多处汇合时先排主链、同层分支和侧边通道，再补标签并渲染验证。
+
 - **如何调用？** Codex 插件中使用 `$iibobo-skills:render-flowcharts`，独立安装时使用 `$render-flowcharts`；Claude Code 插件中使用 `/iibobo-skills:render-flowcharts`。安装和更新见[安装文档](../installation.md)。
 - **怎样描述任务？** 例如：“根据当前订单处理逻辑画流程图，标出库存不足、保存失败和重试出口，输出离线 HTML。”
 - **支持哪些源码？** 支持带方向的 `flowchart` 和兼容别名 `graph` Mermaid 代码块；可使用纵向或横向布局。
 - **能否只要 Mermaid？** 可以，明确要求片段或 Markdown 即可。
-- **如何搬移？** 同时复制 `.html` 与同名 `.assets/` 目录。技能文件夹也可单独复制使用。
+- **如何搬移？** 同时复制顶层 `.html` 与 `flowcharts/` 模块目录。技能文件夹也可单独复制使用。
 - **支持 IDEA 跳转吗？** 当前流程图不接入类图导航协议；源码和规则依据写在 Markdown 正文。
 
 ## It's working if

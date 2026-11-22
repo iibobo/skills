@@ -5,15 +5,68 @@
 .viewport:fullscreen,.viewport.is-fullscreen{width:100vw;height:100dvh;min-height:0;max-height:none;border:0;border-radius:0;background:white;padding-top:80px}.viewport.is-fullscreen{position:fixed;inset:0;z-index:1000}.fullscreen-zoom{display:none;position:fixed;right:20px;bottom:20px;z-index:1100;max-width:calc(100vw - 24px);align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px;padding:6px;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 3px 16px #29273520}.fullscreen-zoom button{height:28px;padding:5px 8px;font-size:12px;line-height:1.3;white-space:nowrap}.viewport:fullscreen .fullscreen-zoom,.viewport.is-fullscreen .fullscreen-zoom{display:flex}.viewport:fullscreen .diagram-navigation,.viewport.is-fullscreen .diagram-navigation{position:fixed;top:16px;left:20px;right:20px;z-index:1100;padding:6px;gap:5px;margin:0;border:1px solid var(--line);border-radius:8px;background:white;box-shadow:0 3px 16px #29273520}
 @media(max-width:640px){header{padding:10px 16px}h1{font-size:19px}main{padding:6px 10px 8px}.toolbar{padding:4px 10px}.viewport{padding:12px}.fullscreen-zoom{right:12px;bottom:12px}.viewport:fullscreen .diagram-navigation,.viewport.is-fullscreen .diagram-navigation{top:12px;left:12px;right:12px}}
 .source-link{cursor:pointer}.source-link:hover{fill:#6949a3;text-decoration:underline}
+
+/* The dropdown floats over the canvas so opening it keeps the current zoom. */
+header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.header-copy{flex:1;min-width:0}
+.diagram-legend{position:relative;flex:0 0 206px;max-width:100%;margin-left:auto;font-size:12px;color:var(--muted)}
+.diagram-legend summary{display:flex;align-items:center;justify-content:space-between;gap:20px;min-width:148px;min-height:28px;padding:4px 9px;list-style:none;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.diagram-legend summary::-webkit-details-marker{display:none}
+.diagram-legend summary:hover{border-color:var(--accent)}
+.diagram-legend summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.diagram-legend summary::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.diagram-legend[open] summary::after{transform:rotate(225deg)}
+.legend-items{position:absolute;top:calc(100% + 5px);right:0;width:min(24rem,calc(100vw - 32px));max-height:min(24rem,60dvh);overflow:auto;overscroll-behavior:contain;margin:0;padding:6px 10px;list-style:none;background:white;border:1px solid var(--line);border-radius:7px;box-shadow:0 5px 16px #29273520}
+.legend-items li{display:flex;align-items:center;gap:8px;padding:5px 0;line-height:1.4}
+.legend-items li+li{border-top:1px solid var(--surface)}
+.legend-items strong{color:var(--ink);font-weight:650}
+.legend-key{display:grid;place-items:center;flex:0 0 64px;color:var(--ink);font-size:11px;white-space:nowrap}
+.legend-key svg{width:38px;height:22px}
+.legend-key .node-shape{fill:#e7f2ff;stroke:#6b8bb7}
+.legend-key .signal{fill:none;stroke:#53657e;stroke-width:1.4;stroke-linejoin:round}
+.legend-key .arrowhead{fill:#53657e}
+.legend-key .decision{fill:#fff4cc;stroke:#ae9342}
+.legend-key .success{fill:#dcfce7;stroke:#42815a}
+.legend-key .failure{fill:#fee2e2;stroke:#b86a6a}
+@media(max-width:640px){header{flex-wrap:wrap;gap:6px}.header-copy{flex-basis:100%}}
 </style></head><body>
-<header><h1>@@TITLE@@</h1><p>调用顺序 · 消息交互 · 分支与循环 · <a href="@@ASSETS@@/source.md">阅读 Markdown 源文件</a> · Shift + 滚轮缩放</p></header><main>
+<header><div class="header-copy"><h1>@@TITLE@@</h1><p>调用顺序 · 消息交互 · 分支与循环 · <a href="@@SOURCE@@">阅读 Markdown 源文件</a> · Shift + 滚轮缩放</p></div>
+<details class="diagram-legend" id="diagram-legend">
+<summary>时序图图例</summary>
+<ul class="legend-items">
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="7" y="1" width="24" height="8"/><path stroke="#6b8bb7" d="M19 9V22"/></svg></span><span><strong>参与者与生命线</strong>　方框或人物表示参与者，竖线沿时间向下。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" d="M2 11H32"/><path class="arrowhead" d="M29 7 36 11 29 15Z"/></svg></span><span><strong>实线箭头</strong>　表示调用或事件，如订阅回调。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" stroke-dasharray="4 2" d="M2 11H32"/><path class="arrowhead" d="M29 7 36 11 29 15Z"/></svg></span><span><strong>虚线箭头</strong>　表示返回结果。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" d="M2 11H35M29 7 35 11 29 15"/></svg></span><span><strong>开放箭头</strong>　表示异步投递，完成情况由后续消息说明。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><code>alt / else</code></span><span><strong>条件分支</strong>　按条件进入一个互斥分支。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><code>loop</code></span><span><strong>循环</strong>　按框内条件或次数重复消息。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><code>opt / par</code></span><span><strong>可选与并行</strong>　opt 按条件执行，par 内的分段可并行。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="decision" x="4" y="3" width="30" height="16"/><path class="signal" d="M9 9H29M9 13H25"/></svg></span><span><strong>注释</strong>　补充说明、约束或假设。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="16" y="3" width="6" height="16"/><path class="signal" d="M19 0V3M19 19V22"/></svg></span><span><strong>激活条</strong>　窄条标出参与者的处理区间。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><code>1 · 2 · 3</code></span><span><strong>消息编号</strong>　按编号追踪消息顺序。</span></li>
+</ul>
+</details>
+</header><main>
 <div class="diagram-navigation" id="diagram-navigation" aria-label="时序图导航"><button type="button" class="nav-arrow" id="previous-diagram" aria-label="上一张时序图"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8 10 13"/></svg></button><nav id="tabs" role="tablist" aria-label="选择时序图"></nav><button type="button" class="nav-arrow" id="next-diagram" aria-label="下一张时序图"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 11 8 6 13"/></svg></button></div>
 <section class="panel" id="diagram-panel" role="tabpanel" aria-labelledby="tab-0"><div class="toolbar"><div class="row-content" id="toolbar-content"><h2 id="title"></h2><div class="controls" aria-label="图形工具"><button id="zoom-out" aria-label="缩小" disabled>−</button><output id="scale">—</output><button id="zoom-in" aria-label="放大" disabled>＋</button><button id="fit" disabled>适应画布</button><button id="actual" disabled>100%</button><button id="fullscreen" data-display-cycle disabled>浏览器全屏</button><button id="export" disabled>导出 SVG</button></div></div><span class="row-summary" id="toolbar-summary" hidden>图形工具栏</span><button class="row-toggle" id="toolbar-toggle" aria-label="收起图形工具栏" aria-expanded="true" aria-controls="toolbar-content">⌃</button></div>
 <div class="viewport" id="viewport" tabindex="0" aria-label="时序图，可滚动查看"><p id="status" role="status" aria-live="polite">正在加载 Mermaid.js…</p><div class="canvas" id="canvas"></div><div class="fullscreen-zoom" role="group" aria-label="全屏缩放控制"><button data-zoom-target="zoom-out" aria-label="缩小全屏时序图" disabled>−</button><output id="fullscreen-scale">—</output><button data-zoom-target="zoom-in" aria-label="放大全屏时序图" disabled>＋</button><button data-zoom-target="fit" disabled>适应画布</button><button data-display-cycle disabled>屏幕全屏</button></div></div></section></main>
 <script id="source-map" type="application/json">@@SOURCE_MAP@@</script><script id="sequence-links" type="application/json">@@SEQUENCE_LINKS@@</script><script src="@@ASSETS@@/sequence-source-links.js"></script>
 <script src="@@ASSETS@@/sequence-navigation.js"></script>
 <script id="diagram-data" type="application/json">@@DIAGRAMS@@</script><script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script><script>
-'use strict';const diagrams=JSON.parse(document.getElementById('diagram-data').textContent);
+'use strict';
+
+const legend = document.getElementById('diagram-legend');
+document.addEventListener('click', event => {
+  if (legend.open && !legend.contains(event.target)) legend.open = false;
+});
+legend.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && legend.open) {
+    event.preventDefault();
+    legend.open = false;
+    legend.querySelector('summary').focus();
+  }
+});
+const diagrams=JSON.parse(document.getElementById('diagram-data').textContent);
 const tabs=document.getElementById('tabs'), canvas=document.getElementById('canvas'), viewport=document.getElementById('viewport'), status=document.getElementById('status');
 const controls=[...document.querySelectorAll('.controls button,.fullscreen-zoom button')];
 const cache=new Map();
@@ -118,6 +171,6 @@ document.getElementById('export').onclick=()=>{
   const svg=canvas.querySelector('svg').cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width',naturalWidth);svg.setAttribute('height',naturalHeight);svg.style.maxWidth='none';svg.style.backgroundColor='#ffffff';
   const blob=new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n',new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sequence-diagram-'+(selected+1)+'.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请保留相邻资源目录。';document.body.dataset.renderError='true';}
+if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请保留 HTML 与图类型目录的相对位置。';document.body.dataset.renderError='true';}
 else{mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',look:'classic',fontFamily:'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',themeVariables:{primaryColor:'#e7f2ff',primaryBorderColor:'#6b8bb7',primaryTextColor:'#292735',actorBkg:'#e7f2ff',actorBorder:'#6b8bb7',actorTextColor:'#292735',noteBkgColor:'#fff5ad',noteTextColor:'#333333',signalColor:'#53657e',signalTextColor:'#292735'},sequence:{useMaxWidth:false,wrap:true,mirrorActors:true,height:65,width:150,actorFontSize:14}});select(0);}
 </script></body></html>
