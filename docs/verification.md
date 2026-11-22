@@ -89,3 +89,12 @@ GitHub Actions 工作流已经配置依赖安装、仓库检查、项目链接�
 - 单独复制技能生成两图，删除技能副本后搬移输出，通过 localhost 浏览器实际渲染订单校验/失败分支及有界重试/子流程示例。多图切换、放大及适应宽度可用；SVG 导出并独立打开后文字、分支标签、边线、回边和分组样式保留。
 - 导出初验发现 HTML 标签后，已在 Mermaid 全局配置显式关闭 `htmlLabels` 并重新生成、渲染和导出；复验确认 SVG 含原生 text 元素且无 foreignObject。
 - 流程图语法对照 Mermaid 官方文档（https://mermaid.js.org/syntax/flowchart.html），运行时固定使用内置 Dagre 布局。未执行完整模型调用、远端 CI 或 IDEA 导航；这些不作为本次验证通过项。
+
+## 时序图布局与真实源码导航复核
+
+日期：2026-11-22（Asia/Shanghai）。正式时序图技能源码与此前修复的安装缓存曾存在差异，现已将紧凑标签布局、完整参与者名称、65 单位框高、统一缩放、上下镜像、符号键导航、映射哈希与覆盖校验同步到正式目录，再同步安装缓存。未修改版本或发布远端。
+
+- `npm run check` 通过：类图 5 项、时序图 8 项、流程图 6 项；两项 Claude 插件严格验证通过，保留既有 README 安装命令建议。
+- Spring AI 2.0.2 七图在实际 IDEA 新版插件会话中检查：首次 116/124 opened，包含 4 项未索引的 QuestionAnswerAdvisor 和 4 项多模块同名控制器歧义。导入项目已有 source-navigation POM 后自动检查为 120/124 opened、4 ambiguous、0 not_found。
+- 对第 6、7 图的上下四个 KnowledgeController 入口分别选择 chapter-07-rag 候选，观察到四次最终 opened，IDEA 编辑器确认为第 7 章源码。自动报告保留 ambiguous，交互选择单独记载，不宣称自动验收 100%。报告位于验证项目 design/sequence-source-open-audit.json 与 sequence-source-manual-open-audit.json。
+- 本次未为消除歧义写死机器文件 URL，也未将未索引类型替换为其他类。

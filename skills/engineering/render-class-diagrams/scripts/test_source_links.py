@@ -57,5 +57,10 @@ class SourceLinksTest(unittest.TestCase):
         self.assertIn('example.Contract', (self.root / 'out.html').read_text())
 
 
+def load_tests(loader, tests, pattern):
+    tests.addTests(loader.discover(str(Path(__file__).resolve().parents[1] / 'tests')))
+    return tests
+
+
 if __name__ == '__main__':
     unittest.main()

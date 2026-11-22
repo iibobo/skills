@@ -72,5 +72,10 @@ class SequenceRendererTest(unittest.TestCase):
         self.assertEqual((moved / 'flows.assets/mermaid-12.3.0.min.js').read_bytes(), (renderer.ASSETS / 'mermaid-12.3.0.min.js').read_bytes())
 
 
+def load_tests(loader, tests, pattern):
+    tests.addTests(loader.discover(str(Path(__file__).resolve().parents[1] / 'tests')))
+    return tests
+
+
 if __name__ == '__main__':
     unittest.main()

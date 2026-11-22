@@ -31,6 +31,9 @@ html,body{height:100%;min-height:0}body{height:100dvh;display:flex;flex-directio
 .fullscreen-zoom button{height:28px;padding:5px 8px;font-size:12px;line-height:1.3;white-space:nowrap}
 .fullscreen-zoom output{font-size:12px;line-height:1.3;min-width:40px;text-align:center}
 .fullscreen-zoom button[data-zoom-target="zoom-out"],.fullscreen-zoom button[data-zoom-target="zoom-in"]{width:28px;padding:5px}
+
+/* Native horizontal scrolling plus inertial mouse dragging. */
+#tabs{display:flex;flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:auto;user-select:none;margin:0}#tabs::-webkit-scrollbar{display:none}#tabs button{flex:0 0 auto;white-space:nowrap}#tabs.is-dragging,#tabs.is-dragging button{cursor:grabbing}
 </style>
 </head>
 <body>
@@ -56,6 +59,7 @@ html,body{height:100%;min-height:0}body{height:100dvh;display:flex;flex-directio
 <script id="source-map" type="application/json">{}</script>
 <script id="diagram-data" type="application/json">[{"title": "1. 执行模块", "source": "classDiagram\n    direction TB\n    class Job {\n        \u003c\u003cinterface>>\n        +call(request)\n    }\n    class AbstractWorker {\n        \u003c\u003cabstract>>\n        +call(request)\n    }\n    class Worker {\n        +call(request)\n        +getStatus()\n    }\n    Job \u003c|.. AbstractWorker : 实现\n    AbstractWorker \u003c|-- Worker : 继承\n    note for Worker \"执行订单任务\"\n    style Job fill:#E7F2FF,stroke:#3D78A8,color:#173A58\n    style AbstractWorker fill:#FFF0DD,stroke:#B67526,color:#694011\n    style Worker fill:#DCD0F3,stroke:#8055BA,color:#292735"}, {"title": "2. 缓存模块", "source": "classDiagram\n    direction TB\n    class Store {\n        \u003c\u003cinterface>>\n        +add(data)\n        +get(id)\n        +clear()\n    }\n    class LocalCache {\n        +add(data)\n        +get(id)\n        +clear()\n    }\n    Store \u003c|.. LocalCache : 实现\n    note for LocalCache \"保存本地缓存\"\n    style Store fill:#E7F2FF,stroke:#3D78A8,color:#173A58\n    style LocalCache fill:#DCD0F3,stroke:#8055BA,color:#292735"}]</script>
 <script src="mermaid-12.3.0.min.js"></script>
+<script src="diagram-navigation.js"></script>
 <script src="class-diagram-layout.js"></script>
 <script src="class-diagram-source-links.js"></script>
 <script>
@@ -66,6 +70,7 @@ const controls=[...document.querySelectorAll('.controls button,.fullscreen-zoom 
 const cache=new Map();
 const navigation=document.getElementById('diagram-navigation'),navigationHome=document.createComment('类图导航原始位置');
 navigation.before(navigationHome);
+installDiagramNavigation(navigation);
 let selected=0, zoom=1, naturalWidth=0, naturalHeight=0, renderSequence=0, fitMode=true;
 function setZoom(value){zoom=Math.max(.1,Math.min(3,value));canvas.style.width=(naturalWidth*zoom)+'px';canvas.style.height=(naturalHeight*zoom)+'px';const label=Math.round(zoom*100)+'%';document.getElementById('scale').textContent=label;document.getElementById('fullscreen-scale').textContent=label;}
 function fit(){
@@ -102,7 +107,7 @@ function showResult(result,index){canvas.innerHTML=result.svg;const svg=canvas.q
 async function select(index){
   selected=index;const sequence=++renderSequence;document.getElementById('title').textContent=diagrams[index].title;
   tabs.querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-selected',String(i===index));b.tabIndex=i===index?0:-1;});
-  requestAnimationFrame(()=>{const button=tabs.children[selected],area=tabs.getBoundingClientRect(),item=button.getBoundingClientRect();if(item.left<area.left)tabs.scrollLeft+=item.left-area.left;else if(item.right>area.right)tabs.scrollLeft+=item.right-area.right;});document.getElementById('diagram-panel').setAttribute('aria-labelledby','tab-'+index);
+  requestAnimationFrame(()=>{const button=tabs.children[selected],area=tabs.getBoundingClientRect(),item=button.getBoundingClientRect();if(item.left<area.left)tabs.scrollBy({left:item.left-area.left,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});else if(item.right>area.right)tabs.scrollBy({left:item.right-area.right,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});document.getElementById('diagram-panel').setAttribute('aria-labelledby','tab-'+index);
   controls.forEach(b=>b.disabled=true);canvas.innerHTML='';canvas.style.width='';canvas.style.height='';status.hidden=false;status.textContent='正在绘制类图…';
   try{if(!cache.has(index)){cache.set(index,await mermaid.render('class-diagram-'+index,diagrams[index].source));}if(sequence===renderSequence)showResult(cache.get(index),index);}
   catch(error){if(sequence===renderSequence){status.textContent='类图渲染失败：'+error.message;document.body.dataset.renderError='true';}console.error(error);}

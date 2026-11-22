@@ -1,40 +1,123 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@@TITLE@@</title>
-<style>
-:root{color-scheme:light;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#23334a;background:#f3f5f8}
-*{box-sizing:border-box}body{margin:0}header,main{max-width:1500px;margin:auto;padding:24px}header{padding-bottom:12px}h1{margin:8px 0;font-size:clamp(24px,4vw,36px);letter-spacing:-.03em}.eyebrow{font-size:12px;color:#516687;letter-spacing:.16em}p{color:#56657b;line-height:1.7}a{color:#345d9d}nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}button,select{font:inherit;border:1px solid #cbd3df;border-radius:6px;background:white;padding:8px 12px;color:inherit}button{cursor:pointer}button:hover{background:#eaf0f9}button:focus-visible,select:focus-visible{outline:3px solid #75a1df}select{max-width:100%}output{min-width:48px;text-align:center;font-size:13px}h2{font-size:19px;margin:0 0 18px}.panel{padding:20px;border:1px solid #d7dfe9;border-radius:10px;background:white;box-shadow:0 8px 24px #23334a08}.viewport{overflow:auto;max-height:80vh;background:white;min-height:180px}.canvas{width:max-content}.canvas svg{display:block;max-width:none!important}#status{white-space:pre-wrap}#status:empty{display:none}@media(max-width:600px){header,main{padding:16px}.panel{padding:12px}nav{gap:6px}button,select{padding:7px 9px}}
-</style>
-</head>
-<body>
-<header><div class="eyebrow">SEQUENCE DIAGRAMS / 时序图</div><h1>@@TITLE@@</h1><p>调用顺序 · 消息交互 · 分支与并发 · <a href="@@ASSETS@@/source.md">阅读 Markdown 源文件</a></p></header>
-<main>
-<nav aria-label="图表与缩放"><label for="diagram-select">场景</label><select id="diagram-select"></select><button id="zoom-out" aria-label="缩小">−</button><output id="scale">100%</output><button id="zoom-in" aria-label="放大">＋</button><button id="fit">适应宽度</button><button id="actual">100%</button><button id="export">导出 SVG</button></nav>
-<section class="panel"><h2 id="diagram-title"></h2><p id="status" role="status" aria-live="polite">正在渲染…</p><div class="viewport" id="viewport" tabindex="0" aria-label="可滚动时序图"><div class="canvas" id="canvas"></div></div></section>
-</main>
-<script id="diagram-data" type="application/json">@@DIAGRAMS@@</script>
-<script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script>
-<script>
-'use strict';
-const diagrams=JSON.parse(document.getElementById('diagram-data').textContent);
-const select=document.getElementById('diagram-select'),canvas=document.getElementById('canvas'),viewport=document.getElementById('viewport'),status=document.getElementById('status');
-let current=0,scale=1,nativeWidth=0,nativeHeight=0,svg=null,revision=0,fitMode=true;
-mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',look:'classic',fontFamily:'system-ui, sans-serif',themeVariables:{primaryColor:'#e3efff',primaryBorderColor:'#6b8bb7',primaryTextColor:'#23334a',lineColor:'#53657e',actorBkg:'#e3efff',actorBorder:'#6b8bb7',actorTextColor:'#23334a',noteBkgColor:'#fff4cc',noteTextColor:'#23334a',signalColor:'#53657e',signalTextColor:'#23334a'},sequence:{useMaxWidth:false,wrap:true,mirrorActors:false}});
-for(const [i,d] of diagrams.entries()){const option=document.createElement('option');option.value=i;option.textContent=d.title;select.append(option);}
-function resize(value){if(!svg)return;scale=Math.max(.1,Math.min(3,value));svg.setAttribute('width',nativeWidth*scale);svg.setAttribute('height',nativeHeight*scale);document.getElementById('scale').value=Math.round(scale*100)+'%';}
-function fit(){if(!svg)return;resize(Math.min(1,(viewport.clientWidth-16)/nativeWidth));}
-async function show(index){const token=++revision;current=index;svg=null;canvas.replaceChildren();status.textContent='正在渲染…';document.getElementById('diagram-title').textContent=diagrams[index].title;document.getElementById('export').disabled=true;try{const result=await mermaid.render('sequence-'+token,diagrams[index].source);if(token!==revision)return;canvas.innerHTML=result.svg;svg=canvas.querySelector('svg');const box=svg.viewBox.baseVal;nativeWidth=box.width;nativeHeight=box.height;if(!nativeWidth||!nativeHeight)throw new Error('图表尺寸无效');svg.style.maxWidth='none';svg.setAttribute('role','img');svg.setAttribute('aria-label',diagrams[index].title);fitMode=true;fit();status.textContent='';document.getElementById('export').disabled=false;}catch(error){if(token!==revision)return;status.textContent='渲染失败，请检查 Mermaid 源码：'+error.message;}}
-select.addEventListener('change',()=>show(Number(select.value)));
-document.getElementById('zoom-in').onclick=()=>{fitMode=false;resize(scale*1.2);};
-document.getElementById('zoom-out').onclick=()=>{fitMode=false;resize(scale/1.2);};
-document.getElementById('actual').onclick=()=>{fitMode=false;resize(1);};
-document.getElementById('fit').onclick=()=>{fitMode=true;fit();};
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>@@TITLE@@</title><style>
+:root{color-scheme:light;--ink:#292735;--muted:#696575;--line:#d9d5e5;--accent:#6949a3;--surface:#f6f5fa}*{box-sizing:border-box}[hidden]{display:none!important}html,body{height:100%;min-height:0}body{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:var(--surface);color:var(--ink);font:15px Arial,"PingFang SC","Microsoft YaHei",sans-serif}header{flex-shrink:0;padding:12px 24px;background:white;border-bottom:1px solid var(--line)}h1{font-size:21px;line-height:1.3;margin:0 0 4px;font-weight:650}header p{font-size:12px;line-height:1.5;margin:0;color:var(--muted)}a{color:var(--accent)}main{flex:1;min-height:0;width:100%;max-width:2000px;margin:auto;display:flex;flex-direction:column;padding:8px 24px 12px;overflow-anchor:none}button{font:inherit;color:inherit;background:white;border:1px solid var(--line);border-radius:5px;padding:5px 8px;cursor:pointer}button:hover{border-color:var(--accent);background:#f2eef9}button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}button:disabled{opacity:.45;cursor:wait}button[aria-selected=true]{color:white;background:var(--accent);border-color:var(--accent)}
+.diagram-navigation{touch-action:auto;user-select:none;display:flex;align-items:center;gap:8px;flex-shrink:0;min-width:0;margin-bottom:8px}#tabs{display:flex;flex:1;min-width:0;gap:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}#tabs.is-dragging,#tabs.is-dragging button{cursor:grabbing}#tabs::-webkit-scrollbar{display:none}#tabs button{flex:0 0 auto;white-space:nowrap;font-size:12px;line-height:1.3}.nav-arrow{display:flex;align-items:center;justify-content:center;flex:0 0 26px;width:26px;height:26px;padding:4px;color:var(--accent)}.nav-arrow svg{width:16px;height:16px}.nav-arrow path{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.panel{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:white}.toolbar{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:4px 14px;border-bottom:1px solid var(--line);min-height:34px}.row-content{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1;min-width:0;flex-wrap:wrap}h2{font-size:14px;line-height:1.4;margin:0}.controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.controls button{font-size:12px;line-height:1.3;padding:4px 8px}output{font-size:12px;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}.row-toggle{margin-left:auto;flex:0 0 26px;width:26px;height:26px;padding:2px;border-color:transparent;color:var(--muted)}.row-summary{font-size:12px;color:var(--muted)}.viewport{position:relative;flex:1;min-height:0;overflow:auto;padding:24px;background:white;overscroll-behavior:contain}.canvas{margin:auto}.canvas>svg{display:block;max-width:none!important;height:100%;width:100%}#status{color:var(--muted);padding:22px;text-align:center;line-height:1.8}
+.viewport:fullscreen,.viewport.is-fullscreen{width:100vw;height:100dvh;min-height:0;max-height:none;border:0;border-radius:0;background:white;padding-top:80px}.viewport.is-fullscreen{position:fixed;inset:0;z-index:1000}.fullscreen-zoom{display:none;position:fixed;right:20px;bottom:20px;z-index:1100;max-width:calc(100vw - 24px);align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px;padding:6px;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 3px 16px #29273520}.fullscreen-zoom button{height:28px;padding:5px 8px;font-size:12px;line-height:1.3;white-space:nowrap}.viewport:fullscreen .fullscreen-zoom,.viewport.is-fullscreen .fullscreen-zoom{display:flex}.viewport:fullscreen .diagram-navigation,.viewport.is-fullscreen .diagram-navigation{position:fixed;top:16px;left:20px;right:20px;z-index:1100;padding:6px;gap:5px;margin:0;border:1px solid var(--line);border-radius:8px;background:white;box-shadow:0 3px 16px #29273520}
+@media(max-width:640px){header{padding:10px 16px}h1{font-size:19px}main{padding:6px 10px 8px}.toolbar{padding:4px 10px}.viewport{padding:12px}.fullscreen-zoom{right:12px;bottom:12px}.viewport:fullscreen .diagram-navigation,.viewport.is-fullscreen .diagram-navigation{top:12px;left:12px;right:12px}}
+.source-link{cursor:pointer}.source-link:hover{fill:#6949a3;text-decoration:underline}
+</style></head><body>
+<header><h1>@@TITLE@@</h1><p>调用顺序 · 消息交互 · 分支与循环 · <a href="@@ASSETS@@/source.md">阅读 Markdown 源文件</a> · Shift + 滚轮缩放</p></header><main>
+<div class="diagram-navigation" id="diagram-navigation" aria-label="时序图导航"><button type="button" class="nav-arrow" id="previous-diagram" aria-label="上一张时序图"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8 10 13"/></svg></button><nav id="tabs" role="tablist" aria-label="选择时序图"></nav><button type="button" class="nav-arrow" id="next-diagram" aria-label="下一张时序图"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 11 8 6 13"/></svg></button></div>
+<section class="panel" id="diagram-panel" role="tabpanel" aria-labelledby="tab-0"><div class="toolbar"><div class="row-content" id="toolbar-content"><h2 id="title"></h2><div class="controls" aria-label="图形工具"><button id="zoom-out" aria-label="缩小" disabled>−</button><output id="scale">—</output><button id="zoom-in" aria-label="放大" disabled>＋</button><button id="fit" disabled>适应画布</button><button id="actual" disabled>100%</button><button id="fullscreen" data-display-cycle disabled>浏览器全屏</button><button id="export" disabled>导出 SVG</button></div></div><span class="row-summary" id="toolbar-summary" hidden>图形工具栏</span><button class="row-toggle" id="toolbar-toggle" aria-label="收起图形工具栏" aria-expanded="true" aria-controls="toolbar-content">⌃</button></div>
+<div class="viewport" id="viewport" tabindex="0" aria-label="时序图，可滚动查看"><p id="status" role="status" aria-live="polite">正在加载 Mermaid.js…</p><div class="canvas" id="canvas"></div><div class="fullscreen-zoom" role="group" aria-label="全屏缩放控制"><button data-zoom-target="zoom-out" aria-label="缩小全屏时序图" disabled>−</button><output id="fullscreen-scale">—</output><button data-zoom-target="zoom-in" aria-label="放大全屏时序图" disabled>＋</button><button data-zoom-target="fit" disabled>适应画布</button><button data-display-cycle disabled>屏幕全屏</button></div></div></section></main>
+<script id="source-map" type="application/json">@@SOURCE_MAP@@</script><script id="sequence-links" type="application/json">@@SEQUENCE_LINKS@@</script><script src="@@ASSETS@@/sequence-source-links.js"></script>
+<script src="@@ASSETS@@/sequence-navigation.js"></script>
+<script id="diagram-data" type="application/json">@@DIAGRAMS@@</script><script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script><script>
+'use strict';const diagrams=JSON.parse(document.getElementById('diagram-data').textContent);
+const tabs=document.getElementById('tabs'), canvas=document.getElementById('canvas'), viewport=document.getElementById('viewport'), status=document.getElementById('status');
+const controls=[...document.querySelectorAll('.controls button,.fullscreen-zoom button')];
+const cache=new Map();
+const navigation=document.getElementById('diagram-navigation'),navigationHome=document.createComment('时序图导航原始位置');
+navigation.before(navigationHome);
+let selected=0, zoom=@@INITIAL_ZOOM@@, naturalWidth=0, naturalHeight=0, renderSequence=0, fitMode=false;
+function setZoom(value){zoom=Math.max(.1,Math.min(3,value));canvas.style.width=(naturalWidth*zoom)+'px';canvas.style.height=(naturalHeight*zoom)+'px';const label=Math.round(zoom*100)+'%';document.getElementById('scale').textContent=label;document.getElementById('fullscreen-scale').textContent=label;}
+function fit(){
+  fitMode=true;
+  if(!naturalWidth||!naturalHeight)return;
+  const style=getComputedStyle(viewport);
+  const availableWidth=viewport.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+  let availableHeight=viewport.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom);
+  const zoomBar=document.querySelector('.fullscreen-zoom');
+  if(getComputedStyle(zoomBar).display!=='none'){
+    const bar=zoomBar.getBoundingClientRect(),frame=viewport.getBoundingClientRect();
+    availableHeight-=Math.max(0,frame.bottom-bar.top+12-parseFloat(style.paddingBottom));
+  }
+  setZoom(Math.min(1,availableWidth/naturalWidth,availableHeight/naturalHeight));
+  viewport.scrollTo(0,0);
+}
+function showResult(result,index){canvas.innerHTML=result.svg;const svg=canvas.querySelector('svg');linkSequenceSources(svg,index);svg.setAttribute('role','group');svg.setAttribute('aria-label',diagrams[index].title);const viewBox=svg.viewBox.baseVal;naturalWidth=viewBox.width;naturalHeight=viewBox.height;status.hidden=true;fitMode=false;setZoom(zoom);viewport.scrollTo(0,0);controls.forEach(b=>b.disabled=false);}
+async function select(index){
+  selected=index;const sequence=++renderSequence;document.getElementById('title').textContent=diagrams[index].title;
+  tabs.querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-selected',String(i===index));b.tabIndex=i===index?0:-1;});
+  requestAnimationFrame(()=>{const button=tabs.children[selected],area=tabs.getBoundingClientRect(),item=button.getBoundingClientRect();if(item.left<area.left)tabs.scrollBy({left:item.left-area.left,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});else if(item.right>area.right)tabs.scrollBy({left:item.right-area.right,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});document.getElementById('diagram-panel').setAttribute('aria-labelledby','tab-'+index);
+  controls.forEach(b=>b.disabled=true);canvas.innerHTML='';canvas.style.width='';canvas.style.height='';status.hidden=false;status.textContent='正在绘制时序图…';
+  try{if(!cache.has(index)){cache.set(index,await mermaid.render('sequence-diagram-'+index,diagrams[index].source));}if(sequence===renderSequence)showResult(cache.get(index),index);}
+  catch(error){if(sequence===renderSequence){status.textContent='时序图渲染失败：'+error.message;document.body.dataset.renderError='true';}console.error(error);}
+}
+diagrams.forEach((d,i)=>{const b=document.createElement('button');b.id='tab-'+i;b.type='button';b.role='tab';b.setAttribute('aria-controls','diagram-panel');b.textContent=d.title;b.title=d.title;b.addEventListener('click',()=>select(i));b.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight')next=(i+1)%diagrams.length;if(e.key==='ArrowLeft')next=(i+diagrams.length-1)%diagrams.length;if(e.key==='Home')next=0;if(e.key==='End')next=diagrams.length-1;if(next!==undefined){e.preventDefault();tabs.children[next].focus({preventScroll:true});select(next);}});tabs.append(b);});
+function changeDiagram(direction){select((selected+direction+diagrams.length)%diagrams.length);}
+installSequenceSwipe(navigation);
+navigation.setAttribute('aria-description','左右滑动浏览标签，点击标签选择场景；支持触控板和鼠标惯性拖动');
+ document.getElementById('previous-diagram').addEventListener('click',()=>changeDiagram(-1));
+ document.getElementById('next-diagram').addEventListener('click',()=>changeDiagram(1));
+ document.addEventListener('keydown',event=>{
+   if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey||tabs.contains(event.target)||event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])'))return;
+   if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();changeDiagram(event.key==='ArrowLeft'?-1:1);}
+ });
+document.getElementById('zoom-in').onclick=()=>{fitMode=false;setZoom(zoom*1.2);};document.getElementById('zoom-out').onclick=()=>{fitMode=false;setZoom(zoom/1.2);};document.getElementById('actual').onclick=()=>{fitMode=false;setZoom(1);};document.getElementById('fit').onclick=fit;
+document.querySelectorAll('[data-zoom-target]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.zoomTarget).click()));
 new ResizeObserver(()=>{if(fitMode)fit();}).observe(viewport);
-document.getElementById('export').onclick=()=>{if(!svg)return;const clone=svg.cloneNode(true);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('width',nativeWidth);clone.setAttribute('height',nativeHeight);const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='sequence-'+(current+1)+'.svg';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-show(0);
-</script>
-</body>
-</html>
+document.getElementById('toolbar-toggle').onclick=()=>{const content=document.getElementById('toolbar-content'),button=document.getElementById('toolbar-toggle');content.hidden=!content.hidden;button.setAttribute('aria-expanded',String(!content.hidden));button.textContent=content.hidden?'⌄':'⌃';button.setAttribute('aria-label',content.hidden?'展开图形工具栏':'收起图形工具栏');document.getElementById('toolbar-summary').hidden=!content.hidden;};
+const fullscreenButton=document.getElementById('fullscreen');
+viewport.addEventListener('wheel',event=>{
+  if(!event.shiftKey||event.ctrlKey||event.metaKey||!naturalWidth)return;
+  const delta=(event.deltaY||event.deltaX)*(event.deltaMode===1?16:event.deltaMode===2?viewport.clientHeight:1);
+  if(!delta)return;
+  event.preventDefault();
+  const before=canvas.getBoundingClientRect();
+  const pointX=(event.clientX-before.left)/zoom,pointY=(event.clientY-before.top)/zoom;
+  fitMode=false;
+  setZoom(zoom*Math.exp(-Math.max(-240,Math.min(240,delta))*.002));
+  const after=canvas.getBoundingClientRect();
+  viewport.scrollLeft+=after.left+pointX*zoom-event.clientX;
+  viewport.scrollTop+=after.top+pointY*zoom-event.clientY;
+},{passive:false});
+document.querySelector('.fullscreen-zoom').title='按住 Shift + 鼠标滚轮缩放：向上放大，向下缩小';
+viewport.setAttribute('aria-description','按住 Shift 并滚动鼠标滚轮缩放时序图，普通模式与全屏模式均支持');
+let changingDisplayMode=false;
+viewport.dataset.displayMode='default';
+function displayMode(){return document.fullscreenElement===viewport?'screen':viewport.classList.contains('is-fullscreen')?'browser':'default';}
+function syncFullscreen(){
+  const mode=displayMode(),active=mode!=='default';
+  const labels={default:'默认视图',browser:'浏览器全屏',screen:'屏幕全屏'};
+  const next={default:'browser',browser:'screen',screen:'default'}[mode];
+  viewport.dataset.displayMode=mode;
+  document.querySelectorAll('[data-display-cycle]').forEach(button=>{
+    button.textContent=labels[next];button.setAttribute('aria-pressed',String(active));
+    button.setAttribute('aria-label','当前'+labels[mode]+'，切换到'+labels[next]);
+    button.title='当前：'+labels[mode]+'；点击切换到'+labels[next]+'；Esc 返回默认视图';
+  });
+  document.body.classList.toggle('diagram-expanded',active);
+  if(active){if(navigation.parentElement!==viewport)viewport.prepend(navigation);}else navigationHome.after(navigation);
+  if(active)viewport.focus({preventScroll:true});else fullscreenButton.focus({preventScroll:true});
+  fitMode=false;requestAnimationFrame(()=>setZoom(zoom));
+}
+async function cycleDisplayMode(){
+  if(changingDisplayMode)return;
+  changingDisplayMode=true;
+  try{
+    const mode=displayMode();
+    if(mode==='default')viewport.classList.add('is-fullscreen');
+    else if(mode==='browser'){
+      if(!viewport.requestFullscreen||!document.fullscreenEnabled)throw new Error('Screen fullscreen unavailable');
+      await viewport.requestFullscreen();viewport.classList.remove('is-fullscreen');
+    }else await document.exitFullscreen();
+  }catch{
+    // 屏幕全屏受限时跳过该模式，返回默认视图。
+    if(document.fullscreenElement!==viewport)viewport.classList.remove('is-fullscreen');
+  }finally{changingDisplayMode=false;syncFullscreen();}
+}
+document.querySelectorAll('[data-display-cycle]').forEach(button=>button.addEventListener('click',cycleDisplayMode));
+document.addEventListener('fullscreenchange',syncFullscreen);
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape')return;
+  if(document.fullscreenElement===viewport)document.exitFullscreen().catch(()=>{});
+  else if(viewport.classList.contains('is-fullscreen')){viewport.classList.remove('is-fullscreen');syncFullscreen();}
+});
+document.getElementById('export').onclick=()=>{
+  const svg=canvas.querySelector('svg').cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width',naturalWidth);svg.setAttribute('height',naturalHeight);svg.style.maxWidth='none';svg.style.backgroundColor='#ffffff';
+  const blob=new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n',new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sequence-diagram-'+(selected+1)+'.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请保留相邻资源目录。';document.body.dataset.renderError='true';}
+else{mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',look:'classic',fontFamily:'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',themeVariables:{primaryColor:'#e7f2ff',primaryBorderColor:'#6b8bb7',primaryTextColor:'#292735',actorBkg:'#e7f2ff',actorBorder:'#6b8bb7',actorTextColor:'#292735',noteBkgColor:'#fff5ad',noteTextColor:'#333333',signalColor:'#53657e',signalTextColor:'#292735'},sequence:{useMaxWidth:false,wrap:true,mirrorActors:true,height:65,width:150,actorFontSize:14}});select(0);}
+</script></body></html>

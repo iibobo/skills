@@ -11,7 +11,7 @@ from urllib.parse import quote
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ASSETS = SKILL_ROOT / 'assets'
-RUNTIME_FILES = ('mermaid-12.3.0.min.js', 'class-diagram-layout.js', 'class-diagram-source-links.js', 'mermaid-LICENSE')
+RUNTIME_FILES = ('mermaid-12.3.0.min.js', 'class-diagram-layout.js', 'class-diagram-source-links.js', 'mermaid-LICENSE', 'diagram-navigation.js')
 
 
 def extract_diagrams(markdown):
