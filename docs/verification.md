@@ -66,3 +66,15 @@ GitHub Actions 工作流已经配置依赖安装、仓库检查、项目链接�
 - 对比备份确认原有钩子条目完整保留。用户级脚本与已测试源码逐字节一致。
 - 在 `/private/tmp`（非 Git 项目目录）执行用户配置中新注册的两条实际命令，stdin/stdout JSON 协议及返回结果正确。另通过 4 项提交信息行为测试，覆盖遗漏、正常输出、无变更说明及续接防循环。
 - `npm run check` 及两项平台严格校验通过。未在真实模型回合中验证触发；新增用户级钩子仍需在 Settings → Hooks 审阅并信任，本次未修改信任记录。
+
+## 新增时序图技能
+
+日期：2026-11-22（Asia/Shanghai）。新增正式技能 `render-sequence-diagrams`，包含独立规范、双图示例、离线展示模板、Python 生成器及 Mermaid.js 12.3.0 和许可证。已同步插件清单、市场简介、README、分类索引、使用及安装说明、项目发现链接和 CI；版本保持 `0.1.0`，本次未发布或修改用户安装。
+
+- `npm run check` 通过：5 项既有类图源码链接测试及 5 项时序图生成测试。新测试覆盖多图与类型筛选、源码快照、无时序图输入、覆盖保护、HTML/JSON 转义，以及技能独立复制与产物迁移。
+- `claude plugin validate . --strict` 与 `claude plugin validate .claude-plugin/plugin.json --strict` 均通过；仍有既有 README 安装命令建议。
+- Claude Code 的会话级 `plugin details` 列出两个正式技能；Codex app-server 在临时 `CODEX_HOME` 下的 `skills/list` 返回新技能，`scope=repo`、`enabled=true`，无解析错误。两个项目符号链接均指向正式目录。
+- 临时 Git 仓库副本中加入 `skills/in-progress/unshipped-fixture`，结构检查通过；Claude Code 与 Codex 均发现时序图技能且未发现未发布 fixture。初次副本缺少 Git 根及发现链接，Codex 未识别项目技能；补齐隔离副本结构后复验通过。
+- 将技能单独复制到临时目录生成两个场景，再删除技能副本并搬移产物。通过 localhost 浏览器实际渲染校验/返回/互斥分支与异步/并行/循环两图；多图切换、100% 与放大、适应宽度操作正常。导出的 `sequence-2.svg` 已独立打开，文字、箭头、分组与颜色完整。页面资源均来自迁移后的相邻资源目录。
+- `skill-creator/quick_validate.py` 因当前 Python 缺少 PyYAML 未能运行；仓库 YAML/结构检查及平台校验均已通过。未执行新技能的完整模型调用，不将发现和浏览器验证等同于模型行为验证；尚未在远端运行 CI。
+- 语法参考 Mermaid 官方时序图文档（https://mermaid.js.org/syntax/sequenceDiagram.html），本地示例已按内置运行库实际渲染。

@@ -22,7 +22,10 @@ jobs:
       - run: npm ci
       - run: npm run check
       - name: Check project discovery link
-        run: test "$(realpath .agents/skills/render-class-diagrams)" = "$(realpath skills/engineering/render-class-diagrams)"
+        run: |
+          for skill in render-class-diagrams render-sequence-diagrams; do
+            test "$(realpath .agents/skills/$skill)" = "$(realpath skills/engineering/$skill)"
+          done
       - name: Install platform validator
         run: npm install --global @anthropic-ai/claude-code@2.1.295
       - run: claude plugin validate . --strict

@@ -7,3 +7,5 @@
 可由 Agent 在任务匹配时自动使用，也支持用户显式调用。
 
 - [render-class-diagrams](render-class-diagrams/SKILL.md)：按统一规范生成可迁移的离线 Mermaid 类图；[使用说明](../../docs/engineering/render-class-diagrams.md)。
+
+- [render-sequence-diagrams](render-sequence-diagrams/SKILL.md)：梳理调用顺序、分支与并发，生成可迁移的离线 Mermaid 时序图；[使用说明](../../docs/engineering/render-sequence-diagrams.md)。

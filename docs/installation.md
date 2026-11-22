@@ -17,7 +17,7 @@ codex plugin marketplace add "$PWD"
 codex plugin add iibobo-skills@iibobo
 ```
 
-安装后开启新会话，使用 `$iibobo-skills:render-class-diagrams`。这些命令修改个人 Codex 插件配置。
+安装后开启新会话，使用 `$iibobo-skills:render-class-diagrams` 绘制类图，或 `$iibobo-skills:render-sequence-diagrams` 绘制时序图。这些命令修改个人 Codex 插件配置。
 
 从 GitHub 安装时，将添加市场的命令替换为：
 
@@ -36,7 +36,7 @@ claude plugin marketplace add "$PWD" --scope project
 claude plugin install iibobo-skills@iibobo --scope project
 ```
 
-安装后开启新会话，使用 `/iibobo-skills:render-class-diagrams`。这些命令写入项目的 Claude Code 设置；提交设置前检查其中的本机路径。个人安装可将两个 `--scope project` 均替换为 `--scope user`。
+安装后开启新会话，使用 `/iibobo-skills:render-class-diagrams` 绘制类图，或 `/iibobo-skills:render-sequence-diagrams` 绘制时序图。这些命令写入项目的 Claude Code 设置；提交设置前检查其中的本机路径。个人安装可将两个 `--scope project` 均替换为 `--scope user`。
 
 从 GitHub 安装时，将添加市场的命令替换为：
 
@@ -52,10 +52,11 @@ claude plugin marketplace add iibobo/skills --scope project
 
 ### Codex 项目发现
 
-本仓库的 `.agents/skills/render-class-diagrams` 是指向 `skills/engineering/render-class-diagrams` 的相对符号链接。检出本仓库后，在该项目的新会话中使用：
+本仓库的 `.agents/skills/render-class-diagrams` 和 `.agents/skills/render-sequence-diagrams` 分别以相对符号链接指向对应的 `skills/engineering/<技能名>` 正式目录。检出本仓库后，在该项目的新会话中使用：
 
 ```text
 $iibobo-skills:render-class-diagrams 为指定模块绘制类与接口关系图
+$iibobo-skills:render-sequence-diagrams 为指定请求链路绘制时序图
 ```
 
 本仓库同时带有插件清单，Codex CLI 0.162.0 实测将仓库技能展示为上述带插件前缀的名称；其他宿主以技能选择器展示的名称为准。
@@ -68,7 +69,7 @@ $iibobo-skills:render-class-diagrams 为指定模块绘制类与接口关系图
 claude --plugin-dir "$PWD"
 ```
 
-在会话中使用 `/iibobo-skills:render-class-diagrams`。
+在会话中使用 `/iibobo-skills:render-class-diagrams` 或 `/iibobo-skills:render-sequence-diagrams`。
 
 ## 独立技能安装（Codex）
 
@@ -87,3 +88,5 @@ PY
 ```
 
 完成后在目标项目开启新会话，使用 `$render-class-diagrams`。用户级副本需在技能更新后重新同步。
+
+时序图技能的独立安装方式相同：将上述复制脚本中的两处 `render-class-diagrams` 替换为 `render-sequence-diagrams`，安装后使用 `$render-sequence-diagrams`。

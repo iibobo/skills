@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "check-plugin": "node scripts/check-plugin.mjs",
-    "check": "npm run check-plugin && python3 skills/engineering/render-class-diagrams/scripts/test_source_links.py",
+    "check": "npm run check-plugin && python3 skills/engineering/render-class-diagrams/scripts/test_source_links.py && python3 skills/engineering/render-sequence-diagrams/scripts/test_render_diagrams.py",
     "preversion": "npm run check",
     "version": "node scripts/sync-plugin-version.mjs && npm run check-plugin"
   },

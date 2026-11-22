@@ -1,6 +1,6 @@
 # iibobo skills
 
-可复用的 Agent 技能集合，把工程任务中的操作步骤、检查标准和运行资源放在一起。目前包含一个技能：绘制或修改 Mermaid 类与接口关系图，生成可迁移的离线 HTML，默认为类和方法创建源码跳转入口。
+可复用的 Agent 技能集合，把工程任务中的操作步骤、检查标准和运行资源放在一起。目前包含两个技能：绘制 Mermaid 类与接口关系图，以及梳理调用顺序的时序图，均可生成可迁移的离线 HTML。类图技能默认为类和方法创建源码跳转入口。
 
 配合 IntelliJ IDEA 插件 **Diagram Source Navigator**，可点击类图中的类名或方法，直接跳转到 IDEA 中对应的 Java 类或方法声明。安装插件后，通过 IDEA 的 **Tools → Open Class Diagram with Source Navigation…** 打开生成的 HTML；目标项目需已导入对应源码或依赖。具体见[使用说明](docs/engineering/render-class-diagrams.md)。
 
@@ -34,13 +34,17 @@
 
 类图工作流要求先核对真实声明，再整理类型职责、核心方法、继承与实现关系，并默认生成源码导航所需的符号映射。配合 Diagram Source Navigator，可从图中跳转到 Java 类和方法，适合梳理模块结构、阅读依赖库和讲解设计。具体见[使用说明](docs/engineering/render-class-diagrams.md)。
 
+### 调用链的先后、分支和异步行为难以追踪
+
+时序图工作流根据源码或协议梳理参与者、请求、返回与事件投递，通过条件分支、循环及并行分组说明运行过程。适合解释请求链路、业务流程和消息消费，具体见[时序图使用说明](docs/engineering/render-sequence-diagrams.md)。
+
 ### 图能生成，却难以搬移和复用
 
 类图技能自带渲染模板和运行资源，统一配色、方法分类和关系标注。生成的 HTML 必须与相邻的同名 `.assets/` 目录一起搬移，才能保留离线查看所需的资源；在页面中可导出当前类图的 SVG。具体要求与成功标准见[使用说明](docs/engineering/render-class-diagrams.md)。
 
 ## 技能参考
 
-技能按领域组织，再按调用方式分组。`User-invoked` 仅允许用户显式调用；`Model-invoked` 允许 Agent 在任务匹配时自动使用，也支持用户显式调用。实际发现与调用行为取决于宿主支持和配置，已测范围见[验证记录](docs/verification.md)。目前只有工程领域的 `Model-invoked` 技能。
+技能按领域组织，再按调用方式分组。`User-invoked` 仅允许用户显式调用；`Model-invoked` 允许 Agent 在任务匹配时自动使用，也支持用户显式调用。实际发现与调用行为取决于宿主支持和配置，已测范围见[验证记录](docs/verification.md)。目前两个技能均属于工程领域的 `Model-invoked` 技能。
 
 ### Engineering · 工程
 
@@ -49,6 +53,8 @@
 #### Model-invoked
 
 - [render-class-diagrams](skills/engineering/render-class-diagrams/SKILL.md)：绘制类与接口关系图，生成离线 HTML，支持 SVG 导出，默认创建类与方法的源码跳转入口；[使用说明](docs/engineering/render-class-diagrams.md)。
+
+- [render-sequence-diagrams](skills/engineering/render-sequence-diagrams/SKILL.md)：绘制调用顺序、分支、循环与并行交互，生成离线 HTML 并支持 SVG 导出；[使用说明](docs/engineering/render-sequence-diagrams.md)。
 
 ## 仓库维护
 
