@@ -1,13 +1,14 @@
 {
   "name": "iibobo-skills",
   "version": "0.1.0",
-  "description": "可复用的工程技能，包含可移植的离线 Mermaid 类图与时序图工作流。",
+  "description": "可复用的工程技能，包含可移植的离线 Mermaid 类图、时序图与流程图工作流。",
   "author": {
     "name": "iibobo"
   },
   "repository": "https://github.com/iibobo/skills",
   "skills": [
     "./skills/engineering/render-class-diagrams",
-    "./skills/engineering/render-sequence-diagrams"
+    "./skills/engineering/render-sequence-diagrams",
+    "./skills/engineering/render-flowcharts"
   ]
 }

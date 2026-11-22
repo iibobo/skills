@@ -23,7 +23,7 @@ jobs:
       - run: npm run check
       - name: Check project discovery link
         run: |
-          for skill in render-class-diagrams render-sequence-diagrams; do
+          for skill in render-class-diagrams render-sequence-diagrams render-flowcharts; do
             test "$(realpath .agents/skills/$skill)" = "$(realpath skills/engineering/$skill)"
           done
       - name: Install platform validator

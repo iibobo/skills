@@ -78,3 +78,14 @@ GitHub Actions 工作流已经配置依赖安装、仓库检查、项目链接�
 - 将技能单独复制到临时目录生成两个场景，再删除技能副本并搬移产物。通过 localhost 浏览器实际渲染校验/返回/互斥分支与异步/并行/循环两图；多图切换、100% 与放大、适应宽度操作正常。导出的 `sequence-2.svg` 已独立打开，文字、箭头、分组与颜色完整。页面资源均来自迁移后的相邻资源目录。
 - `skill-creator/quick_validate.py` 因当前 Python 缺少 PyYAML 未能运行；仓库 YAML/结构检查及平台校验均已通过。未执行新技能的完整模型调用，不将发现和浏览器验证等同于模型行为验证；尚未在远端运行 CI。
 - 语法参考 Mermaid 官方时序图文档（https://mermaid.js.org/syntax/sequenceDiagram.html），本地示例已按内置运行库实际渲染。
+
+## 新增流程图技能
+
+日期：2026-11-22（Asia/Shanghai）。新增正式技能 `render-flowcharts`，包含流程图规范、双图示例、独立离线展示模板、生成器和 Mermaid.js 12.3.0 与许可证；同步清单、市场简介、索引、使用及安装说明、发现链接和 CI。保持版本 `0.1.0`，未发布或更改用户安装。
+
+- `npm run check` 通过：既有类图 5 项、时序图 5 项及流程图 6 项测试。新技能覆盖多图、排除其他图类型、`graph` 别名与五种方向、覆盖保护、转义、快照，以及技能独立复制和产物迁移。
+- 两项 `claude plugin validate ... --strict` 均通过；保留既有 README 安装命令建议。三个项目发现链接均指向正式目录。
+- Claude Code 的会话级插件清单列出三个正式技能。临时 Git 仓库副本及临时 `CODEX_HOME` 中，Codex app-server 的 `skills/list` 识别 `iibobo-skills:render-flowcharts`，未识别 `in-progress/unshipped-fixture`；Claude Code 同样发现新技能且排除 fixture。没有修改用户持久配置。
+- 单独复制技能生成两图，删除技能副本后搬移输出，通过 localhost 浏览器实际渲染订单校验/失败分支及有界重试/子流程示例。多图切换、放大及适应宽度可用；SVG 导出并独立打开后文字、分支标签、边线、回边和分组样式保留。
+- 导出初验发现 HTML 标签后，已在 Mermaid 全局配置显式关闭 `htmlLabels` 并重新生成、渲染和导出；复验确认 SVG 含原生 text 元素且无 foreignObject。
+- 流程图语法对照 Mermaid 官方文档（https://mermaid.js.org/syntax/flowchart.html），运行时固定使用内置 Dagre 布局。未执行完整模型调用、远端 CI 或 IDEA 导航；这些不作为本次验证通过项。

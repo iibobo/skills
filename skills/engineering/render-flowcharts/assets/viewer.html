@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@@TITLE@@</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#23334a;background:#f3f5f8}
+*{box-sizing:border-box}body{margin:0}header,main{max-width:1500px;margin:auto;padding:24px}header{padding-bottom:12px}h1{margin:8px 0;font-size:clamp(24px,4vw,36px);letter-spacing:-.03em}.eyebrow{font-size:12px;color:#516687;letter-spacing:.16em}p{color:#56657b;line-height:1.7}a{color:#345d9d}nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}button,select{font:inherit;border:1px solid #cbd3df;border-radius:6px;background:white;padding:8px 12px;color:inherit}button{cursor:pointer}button:hover{background:#eaf0f9}button:focus-visible,select:focus-visible{outline:3px solid #75a1df}select{max-width:100%}output{min-width:48px;text-align:center;font-size:13px}h2{font-size:19px;margin:0 0 18px}.panel{padding:20px;border:1px solid #d7dfe9;border-radius:10px;background:white;box-shadow:0 8px 24px #23334a08}.viewport{overflow:auto;max-height:80vh;background:white;min-height:180px}.canvas{width:max-content}.canvas svg{display:block;max-width:none!important}#status{white-space:pre-wrap}#status:empty{display:none}@media(max-width:600px){header,main{padding:16px}.panel{padding:12px}nav{gap:6px}button,select{padding:7px 9px}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">FLOWCHARTS / 流程图</div><h1>@@TITLE@@</h1><p>处理步骤 · 条件判断 · 分支与循环 · <a href="@@ASSETS@@/source.md">阅读 Markdown 源文件</a></p></header>
+<main>
+<nav aria-label="图表与缩放"><label for="diagram-select">场景</label><select id="diagram-select"></select><button id="zoom-out" aria-label="缩小">−</button><output id="scale">100%</output><button id="zoom-in" aria-label="放大">＋</button><button id="fit">适应宽度</button><button id="actual">100%</button><button id="export">导出 SVG</button></nav>
+<section class="panel"><h2 id="diagram-title"></h2><p id="status" role="status" aria-live="polite">正在渲染…</p><div class="viewport" id="viewport" tabindex="0" aria-label="可滚动流程图"><div class="canvas" id="canvas"></div></div></section>
+</main>
+<script id="diagram-data" type="application/json">@@DIAGRAMS@@</script>
+<script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script>
+<script>
+'use strict';
+const diagrams=JSON.parse(document.getElementById('diagram-data').textContent);
+const select=document.getElementById('diagram-select'),canvas=document.getElementById('canvas'),viewport=document.getElementById('viewport'),status=document.getElementById('status');
+let current=0,scale=1,nativeWidth=0,nativeHeight=0,svg=null,revision=0,fitMode=true;
+mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',look:'classic',layout:'dagre',htmlLabels:false,fontFamily:'system-ui, sans-serif',themeVariables:{primaryColor:'#e3efff',primaryBorderColor:'#6b8bb7',primaryTextColor:'#23334a',lineColor:'#53657e',actorBkg:'#e3efff',actorBorder:'#6b8bb7',actorTextColor:'#23334a',noteBkgColor:'#fff4cc',noteTextColor:'#23334a',signalColor:'#53657e',signalTextColor:'#23334a'},flowchart:{useMaxWidth:false,htmlLabels:false,curve:'linear'}});
+for(const [i,d] of diagrams.entries()){const option=document.createElement('option');option.value=i;option.textContent=d.title;select.append(option);}
+function resize(value){if(!svg)return;scale=Math.max(.1,Math.min(3,value));svg.setAttribute('width',nativeWidth*scale);svg.setAttribute('height',nativeHeight*scale);document.getElementById('scale').value=Math.round(scale*100)+'%';}
+function fit(){if(!svg)return;resize(Math.min(1,(viewport.clientWidth-16)/nativeWidth));}
+async function show(index){const token=++revision;current=index;svg=null;canvas.replaceChildren();status.textContent='正在渲染…';document.getElementById('diagram-title').textContent=diagrams[index].title;document.getElementById('export').disabled=true;try{const result=await mermaid.render('flowchart-'+token,diagrams[index].source);if(token!==revision)return;canvas.innerHTML=result.svg;svg=canvas.querySelector('svg');const box=svg.viewBox.baseVal;nativeWidth=box.width;nativeHeight=box.height;if(!nativeWidth||!nativeHeight)throw new Error('图表尺寸无效');svg.style.maxWidth='none';svg.setAttribute('role','img');svg.setAttribute('aria-label',diagrams[index].title);fitMode=true;fit();status.textContent='';document.getElementById('export').disabled=false;}catch(error){if(token!==revision)return;status.textContent='渲染失败，请检查 Mermaid 源码：'+error.message;}}
+select.addEventListener('change',()=>show(Number(select.value)));
+document.getElementById('zoom-in').onclick=()=>{fitMode=false;resize(scale*1.2);};
+document.getElementById('zoom-out').onclick=()=>{fitMode=false;resize(scale/1.2);};
+document.getElementById('actual').onclick=()=>{fitMode=false;resize(1);};
+document.getElementById('fit').onclick=()=>{fitMode=true;fit();};
+new ResizeObserver(()=>{if(fitMode)fit();}).observe(viewport);
+document.getElementById('export').onclick=()=>{if(!svg)return;const clone=svg.cloneNode(true);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('width',nativeWidth);clone.setAttribute('height',nativeHeight);const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='flowchart-'+(current+1)+'.svg';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+show(0);
+</script>
+</body>
+</html>
