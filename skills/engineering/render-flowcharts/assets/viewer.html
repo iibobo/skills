@@ -53,6 +53,7 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
 <script src="@@ASSETS@@/diagram-navigation.js"></script>
 <script src="@@ASSETS@@/flowchart-edges.js"></script>
 <script id="diagram-data" type="application/json">@@DIAGRAMS@@</script>
+<script id="source-map" type="application/json">@@SOURCE_MAP@@</script>
 <script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script>
 <script>
 'use strict';
@@ -71,6 +72,7 @@ legend.addEventListener('keydown', event => {
 
 
 const diagrams = JSON.parse(document.getElementById('diagram-data').textContent);
+const sourceMap = JSON.parse(document.getElementById('source-map').textContent);
 const tabs = document.getElementById('tabs');
 const canvas = document.getElementById('canvas');
 const viewport = document.getElementById('viewport');
@@ -160,6 +162,11 @@ async function select(index) {
     if (token !== revision) return;
     canvas.innerHTML = renderCache.get(index);
     const svg = canvas.querySelector('svg');
+    for (const node of svg.querySelectorAll('g.node')) {
+      const nodeId = node.id.match(/-flowchart-(.+)-\d+$/)?.[1];
+      const symbol = (index + 1) + ':' + nodeId;
+      if (nodeId && Object.hasOwn(sourceMap, symbol)) node.dataset.sourceSymbol = symbol;
+    }
     const direction = diagrams[index].source.match(/^\s*(?:flowchart|graph)\s+(\w+)/)[1];
     straightenFlowchartEdges(svg, direction, diagrams[index].source);
     const { width, height } = svg.viewBox.baseVal;
@@ -257,7 +264,7 @@ function endPan() {
 viewport.addEventListener('pointerdown', event => {
   if (!event.isPrimary || event.pointerType !== 'mouse' || event.button !== 0
       || !viewport.hasAttribute('data-pannable')
-      || event.target.closest('.diagram-navigation, .fullscreen-zoom, a, button, input, select, textarea, [contenteditable]')) return;
+      || event.target.closest('.diagram-navigation, .fullscreen-zoom, .navigator-clickable, a, button, input, select, textarea, [contenteditable]')) return;
   const bounds = viewport.getBoundingClientRect();
   if (event.clientX >= bounds.left + viewport.clientWidth
       || event.clientY >= bounds.top + viewport.clientHeight) return;

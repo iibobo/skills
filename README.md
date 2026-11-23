@@ -8,6 +8,12 @@
 
 仓库内的 `iibobo` 是自建插件市场的名称。将插件文件推送到可访问的 GitHub 仓库后，其他用户可添加该仓库作为市场来源并安装插件；上架 ChatGPT / Codex 公共插件目录还需按[官方流程](https://developers.openai.com/plugins/deploy/submission)单独提交审核。
 
+**在 Codex 中调用绘图技能**
+
+<img src="docs/images/codex-diagram-skills.png" alt="在 Codex 中调用绘图技能，为 Spring AI 核心类生成流程图、时序图和类图" width="640">
+
+插件仓库：[iibobo/skills](https://github.com/iibobo/skills)
+
 ## 源码跳转演示
 
 **IDEA 插件：Diagram Source Navigator**

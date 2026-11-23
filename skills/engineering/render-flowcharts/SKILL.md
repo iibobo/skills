@@ -20,6 +20,7 @@ description: 创建或修改 Mermaid 流程图，梳理处理步骤、条件判�
    ```
 
    生成器使用 Python 3.9+ 标准库，提取带方向的 `flowchart` 或 `graph` 代码块并原样保存。Mermaid.js 和许可证随技能打包。
+   需要从节点跳转 IDEA 源码时，按[源码跳转](references/flowchart-guidelines.md#源码跳转)记录经核对的全限定类名和行号。
 4. **渲染验收。** 在浏览器逐图走读主链、分支、回边和终点。按[验收清单](references/flowchart-guidelines.md#验收清单)核对节点和标签间距、连线端点与 SVG。查看器或资源变更时，验证切图、图例、缩放、拖动、全屏和迁移后的离线打开。报告实际验证范围。
 5. **交付。** 提供 Markdown、顶层 HTML 和对应模块目录。用户只要 Mermaid 或 Markdown 时，按指定范围交付。
 

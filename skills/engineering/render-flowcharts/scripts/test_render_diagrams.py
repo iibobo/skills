@@ -79,6 +79,47 @@ class FlowchartRendererTest(unittest.TestCase):
         self.assertNotIn(str(renderer.SKILL_ROOT), page)
         self.assertEqual((moved / 'flowcharts/flows.assets/mermaid-12.3.0.min.js').read_bytes(), (renderer.ASSETS / 'mermaid-12.3.0.min.js').read_bytes())
 
+    def test_source_maps_keep_repeated_node_ids_in_their_diagrams(self):
+        markdown = '''# 流程
+
+## First
+```mermaid
+flowchart TB
+  %% source-map: {"Check":{"className":"demo.Worker$Nested","line":1}}
+  Check{"有效？"} --> Done
+```
+
+## Second
+```mermaid
+flowchart LR
+  %% source-map: {"Check":{"className":"demo.Worker","line":22}}
+  Check{"完成？"} --> Done
+```
+'''
+        self.source.write_text(markdown, encoding='utf-8')
+        self.assertEqual(renderer.generate(self.source, self.output), 2)
+        page = self.output.read_text(encoding='utf-8')
+        data = json.loads(re.search(r'id="source-map" type="application/json">(.*?)</script>', page, re.S)[1])
+        self.assertEqual(data, {
+            '1:Check': {'className': 'demo.Worker$Nested', 'line': 1},
+            '2:Check': {'className': 'demo.Worker', 'line': 22},
+        })
+        self.assertEqual((self.output.parent / 'flowcharts/flows.assets/source.md').read_text(encoding='utf-8'), markdown)
+
+    def test_malformed_source_maps_do_not_write_output(self):
+        for invalid in ('[1]', '{"Check":{"className":"demo..Worker","line":22}}',
+                        '{"Check":{"className":"demo.Worker","line":true}}',
+                        '{"Check":{"className":"demo.Worker","line":1.5}}',
+                        '{"Check":{"className":"demo.Worker","line":0}}',
+                        '{"Check":{"className":"demo.Worker","line":2147483648}}',
+                        '{"Check":{}}', '{broken', '{}\n  %% source-map: {}'):
+            with self.subTest(directive=invalid):
+                self.source.write_text(f'# 流程\n```mermaid\nflowchart TB\n  %% source-map: {invalid}\n  Check --> Done\n```\n',
+                                       encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, 'source-map in diagram 1'):
+                    renderer.generate(self.source, self.output)
+                self.assertFalse(self.output.exists())
+
 
 def load_tests(loader, tests, pattern):
     tests.addTests(loader.discover(str(Path(__file__).resolve().parents[1] / 'tests')))

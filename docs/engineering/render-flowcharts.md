@@ -19,7 +19,7 @@
 - **支持哪些源码？** 支持带方向的 `flowchart` 和兼容别名 `graph` Mermaid 代码块；可使用纵向或横向布局。
 - **能否只要 Mermaid？** 可以，明确要求片段或 Markdown 即可。
 - **如何搬移？** 同时复制顶层 `.html` 与 `flowcharts/` 模块目录。技能文件夹也可单独复制使用。
-- **支持 IDEA 跳转吗？** 当前流程图不接入类图导航协议；源码和规则依据写在 Markdown 正文。
+- **支持 IDEA 跳转吗？** 在 Mermaid 图块内添加 `%% source-map:` 注释，用节点 ID 映射 Java 全限定类名和从 1 开始的行号。用支持流程图行号的 Diagram Source Navigator 插件打开生成的 HTML，即可点击节点定位。见[配置示例](../../skills/engineering/render-flowcharts/references/flowchart-guidelines.md#源码跳转)。
 
 ## It's working if
 
