@@ -41,6 +41,17 @@ class SourceLinksTest(unittest.TestCase):
             self.generate()
         self.assertFalse((self.root / 'out.html').exists())
 
+    def test_inline_method_requires_the_same_mapping_as_a_block_member(self):
+        self.source.write_text('```mermaid\nclassDiagram\n class Worker\n Worker : +call(request) Result\n```\n')
+        target = self.data['Worker']['methods'].pop('call(request)')
+        with self.assertRaisesRegex(ValueError, r'Missing source links: Worker\.call\(request\)'):
+            self.generate()
+        self.assertFalse((self.root / 'out.html').exists())
+
+        self.data['Worker']['methods']['call(request)'] = target
+        self.assertEqual(self.generate(), 1)
+        self.assertIn('example.Request', (self.root / 'out.html').read_text())
+
     def test_shortened_parameters_rejected(self):
         self.data['Worker']['methods']['call(request)']['parameterTypes'] = ['...']
         with self.assertRaisesRegex(ValueError, 'parameterTypes'):
@@ -55,6 +66,40 @@ class SourceLinksTest(unittest.TestCase):
         self.data['Worker']['methods']['call(request)']['className'] = 'example.Contract'
         self.generate()
         self.assertIn('example.Contract', (self.root / 'out.html').read_text())
+
+    def test_overwriting_with_a_plain_diagram_removes_copied_source(self):
+        self.source.write_text('```mermaid\nclassDiagram\n class Worker\n```\n')
+        java = self.root / 'Worker.java'
+        java.write_text('class Worker {}\n')
+        self.data = {'Worker': {'file': java.name, 'line': 1}}
+        self.generate()
+        assets = self.root / 'class-diagrams/out.assets'
+        self.assertEqual(len(list((assets / 'sources').glob('*Worker.java'))), 1)
+        notes = assets.parent / 'notes.md'
+        notes.write_text('Keep this file.\n')
+
+        renderer.generate(self.source, self.root / 'out.html', overwrite=True)
+
+        self.assertFalse((assets / 'sources').exists())
+        self.assertNotIn('Worker.java', (self.root / 'out.html').read_text())
+        self.assertEqual((assets / 'source.md').read_text(), self.source.read_text())
+        self.assertEqual(notes.read_text(), 'Keep this file.\n')
+
+    def test_failed_overwrite_preserves_previous_resources(self):
+        self.generate()
+        assets = self.root / 'class-diagrams/out.assets'
+        before = (assets / 'source.md').read_bytes()
+        output = self.root / 'out.html'
+        output.unlink()
+        output.mkdir()
+        self.source.write_text(self.source.read_text().replace('Example', 'Changed'))
+
+        with self.assertRaises(OSError):
+            renderer.generate(self.source, output, overwrite=True)
+
+        self.assertEqual((assets / 'source.md').read_bytes(), before)
+        self.assertTrue(output.is_dir())
+        self.assertEqual(list(assets.parent.iterdir()), [assets])
 
 
 def load_tests(loader, tests, pattern):

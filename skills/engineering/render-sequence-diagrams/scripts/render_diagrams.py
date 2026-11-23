@@ -13,6 +13,10 @@ from urllib.parse import quote
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ASSETS = SKILL_ROOT / 'assets'
 RUNTIME_FILES = ('mermaid-12.3.0.min.js', 'mermaid-LICENSE', 'sequence-source-links.js', 'sequence-navigation.js')
+ACTOR_ID = r'[\w$][\w$.-]*'
+ACTOR = re.compile(rf'(?:create\s+)?(?:participant|actor)\s+({ACTOR_ID})(?:\s+as\s+(?:(?:no)?wrap:\s*)?(.+))?')
+ARROW = r'(?:<<--?>>|--?(?:>>?|[x)]|\|[\\/]|//|\\\\)|(?:/\||//|\\\\)--?|\.\.>)'
+MESSAGE = re.compile(rf'({ACTOR_ID}?)\s*(?:\(\))?{ARROW}(?:\(\))?\s*[+-]?\s*({ACTOR_ID})\s*:\s*(.*)')
 
 
 def extract_diagrams(markdown):
@@ -26,6 +30,28 @@ def extract_diagrams(markdown):
     if not diagrams:
         raise ValueError('No fenced Mermaid sequenceDiagram blocks found.')
     return diagrams
+
+
+def navigation_items(source):
+    actors = {}
+    messages = []
+    for line in source.splitlines():
+        line = line.strip()
+        if line.startswith('%%'):
+            continue
+        actor = ACTOR.fullmatch(line)
+        if actor:
+            name, label = actor.groups()
+            actors[name] = label or name
+        elif re.match(r'(?:create\s+)?(?:participant|actor)\s', line):
+            raise ValueError(f'Unsupported participant declaration for source mapping: {line}')
+        message = MESSAGE.fullmatch(line)
+        if message:
+            messages.append(message.groups())
+    for sender, receiver, _ in messages:
+        actors.setdefault(sender, sender)
+        actors.setdefault(receiver, receiver)
+    return actors, messages
 
 
 def validate_mapping(diagrams, mapping, required):
@@ -42,8 +68,10 @@ def validate_mapping(diagrams, mapping, required):
     for diagram, scene in zip(diagrams, scenes):
         if scene['sourceHash'] != hashlib.sha256(diagram['source'].encode()).hexdigest():
             raise ValueError('Stale source mapping: ' + diagram['title'])
-        actors = dict(re.findall(r'^\s*(?:participant|actor) (\w+) as (?:nowrap: )?(.+)$', diagram['source'], re.M))
-        messages = re.findall(r'^\s*(\w+)\s*([<\-\.>=()]+)\s*(\w+):\s*(.+)$', diagram['source'], re.M)
+        actors, messages = navigation_items(diagram['source'])
+        missing = actors.keys() - scene['participants'].keys()
+        if missing:
+            raise ValueError('Missing participants: ' + ', '.join(sorted(missing)))
         if set(scene['participants']) != set(actors) or len(scene['messages']) != len(messages):
             raise ValueError('Mapping coverage differs from source.')
         items = []
@@ -51,7 +79,7 @@ def validate_mapping(diagrams, mapping, required):
             item = scene['participants'][actor]
             if item['label'] != label: raise ValueError('Stale participant label')
             items.append(item)
-        for item, (sender, arrow, receiver, label) in zip(scene['messages'], messages):
+        for item, (sender, receiver, label) in zip(scene['messages'], messages):
             if (item['from'], item['to'], item['label']) != (sender, receiver, label): raise ValueError('Stale message label')
             items.append(item)
         for item in items:

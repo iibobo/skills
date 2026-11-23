@@ -36,7 +36,7 @@ description: 创建或修改 Mermaid 类与接口关系图，使用内置配色�
 
 ## 文件布局
 
-HTML 统一放在交付目录顶层。将 Markdown、符号映射（如适用）归入 `class-diagrams/`，审计资料按需放进模块内的 `audits/`。运行资源由生成器写入 `class-diagrams/<topic>.assets/`。源 Markdown 位于该模块目录时，默认在其上一层生成同名 HTML；`--output` 可指定 HTML 路径。迁移时保持模块目录与 HTML 的相对位置。
+HTML 统一放在交付目录顶层。将 Markdown、符号映射（如适用）归入 `class-diagrams/`，审计资料按需放进模块内的 `audits/`。运行资源由生成器写入 `class-diagrams/<topic>.assets/`。`--overwrite` 会替换该资源目录并清理上次生成的源码副本，输入和手写文件应保存在资源目录之外。源 Markdown 位于模块目录时，默认在其上一层生成同名 HTML；`--output` 可指定 HTML 路径。迁移时保持模块目录与 HTML 的相对位置。
 
 ## 完成条件
 

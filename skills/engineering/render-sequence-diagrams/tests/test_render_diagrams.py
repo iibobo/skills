@@ -43,5 +43,47 @@ class RendererTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unresolved'):
             render.validate_mapping([{'source': source, 'title': 'Demo'}], mapping, True)
 
+    def test_strict_mapping_requires_unaliased_participants(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = 'sequenceDiagram\n actor Requester\n participant Worker as Service\n Requester->>Worker: call()'
+            markdown = root / 'demo.md'
+            markdown.write_text(f'```mermaid\n{source}\n```\n')
+            output = root / 'demo.html'
+            mapping_file = root / 'map.json'
+            scene = {
+                'sourceHash': hashlib.sha256(source.encode()).hexdigest(),
+                'participants': {'Worker': {'label': 'Service', 'reason': 'External service'}},
+                'messages': [{'from': 'Requester', 'to': 'Worker', 'label': 'call()', 'reason': 'External call'}],
+            }
+            mapping_file.write_text(json.dumps({'diagrams': [scene]}))
+            with self.assertRaisesRegex(ValueError, 'Missing participants: Requester'):
+                render.generate(markdown, output, source_map=mapping_file, require_source_links=True)
+            self.assertFalse(output.exists())
+
+            scene['participants']['Requester'] = {'label': 'Requester', 'reason': 'Human actor'}
+            mapping_file.write_text(json.dumps({'diagrams': [scene]}))
+            self.assertEqual(render.generate(markdown, output, source_map=mapping_file), 1)
+
+    def test_strict_mapping_checks_activation_arrows_and_implicit_participants(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = 'sequenceDiagram\n A->>+B: call()\n B-->>-A: result'
+            markdown = root / 'activation.md'
+            markdown.write_text(f'```mermaid\n{source}\n```\n')
+            output = root / 'activation.html'
+            mapping_file = root / 'map.json'
+            scene = {
+                'sourceHash': hashlib.sha256(source.encode()).hexdigest(),
+                'participants': {name: {'label': name, 'reason': 'External participant'} for name in ('A', 'B')},
+                'messages': [{'from': 'A', 'to': 'B', 'label': 'call()', 'reason': 'External call'}],
+            }
+            mapping_file.write_text(json.dumps({'diagrams': [scene]}))
+            with self.assertRaisesRegex(ValueError, 'Mapping coverage differs from source'):
+                render.generate(markdown, output, source_map=mapping_file)
+            scene['messages'].append({'from': 'B', 'to': 'A', 'label': 'result', 'reason': 'Return value'})
+            mapping_file.write_text(json.dumps({'diagrams': [scene]}))
+            self.assertEqual(render.generate(markdown, output, source_map=mapping_file), 1)
+
 if __name__ == '__main__':
     unittest.main()

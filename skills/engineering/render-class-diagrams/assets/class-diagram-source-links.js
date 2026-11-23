@@ -3,7 +3,7 @@ function linkDiagramSources(svg) {
   const data = document.getElementById('source-map');
   if (!data) return;
   const locations = JSON.parse(data.textContent);
-  const normalize = value => (value.trim().match(/^[+\-#~]?\s*([\w$]+\([^)]*\))/)?.[1] || value.trim()).replace(/\s/g, '');
+  const normalize = value => (value.trim().match(/^[+\-#~]?\s*([\w$]+\s*\([^)]*\))/)?.[1] || value.trim()).replace(/\s/g, '');
   function link(text, location, owner, label) {
     const className = location?.className || owner?.className;
     const symbolic = className && (!location?.methodName || Array.isArray(location.parameterTypes));

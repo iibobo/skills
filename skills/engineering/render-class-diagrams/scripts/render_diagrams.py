@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import tempfile
 from urllib.parse import quote
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +40,74 @@ def replace_once(pattern, replacement, content):
     return result
 
 
+def missing_source_links(diagrams, mapping):
+    def normalize(signature):
+        return re.sub(r'\s+', '', signature).lstrip('+-#~').rstrip('$*')
+
+    displayed = {}
+    for diagram in diagrams:
+        current = None
+        for line in diagram['source'].splitlines():
+            line = line.strip()
+            declaration = re.match(r'class\s+([\w$]+)(?:~[^~]+~)?(?:\s*\["[^"]*"\])?\s*(\{)?', line)
+            inline_member = re.match(r'([\w$]+)(?:~[^~]+~)?\s*:\s*(.+)', line)
+            if declaration:
+                name = declaration[1]
+                displayed.setdefault(name, set())
+                current = name if declaration[2] else None
+                continue
+            if line == '}':
+                current = None
+                continue
+            name, member = inline_member.groups() if inline_member else (current, line)
+            if name:
+                methods = displayed.setdefault(name, set())
+                signature = re.match(r'[+\-#~]?\s*([\w$]+\s*\([^)]*\))', member)
+                if signature:
+                    methods.add(normalize(signature[1]))
+
+    missing = []
+    for name, methods in displayed.items():
+        if name not in mapping:
+            missing.append(name)
+        mapped = {normalize(key) for key in mapping.get(name, {}).get('methods', {})}
+        missing.extend(f'{name}.{signature}' for signature in sorted(methods - mapped))
+    return missing
+
+
+def publish(output, resource_dir, staged_output, staged_resources, overwrite):
+    lock = resource_dir.with_name(f'.{resource_dir.name}.lock')
+    try:
+        lock.mkdir()
+    except FileExistsError as error:
+        raise ValueError(f'Another generation is using {resource_dir}; retry after it finishes.') from error
+    previous = lock / 'previous'
+    try:
+        if resource_dir.is_symlink() or (resource_dir.exists() and not resource_dir.is_dir()):
+            raise ValueError(f'Expected a regular generated resources directory: {resource_dir}')
+        if not overwrite and (output.exists() or resource_dir.exists()):
+            raise ValueError(f'Output or resources already exist: {output}; use --overwrite.')
+        if resource_dir.exists():
+            resource_dir.rename(previous)
+        installed = False
+        try:
+            staged_resources.rename(resource_dir)
+            installed = True
+            staged_output.replace(output)
+        except BaseException:
+            if installed:
+                resource_dir.rename(staged_resources)
+            if previous.exists():
+                previous.rename(resource_dir)
+            raise
+        if previous.exists():
+            shutil.rmtree(previous)
+    finally:
+        # Preserve the backup if a filesystem failure also prevented rollback.
+        if not previous.exists():
+            lock.rmdir()
+
+
 def generate(source, output, title=None, subtitle='类与接口关系图 · 主要职责与核心方法', overwrite=False, source_map=None, require_source_links=False):
     source, output = Path(source).resolve(), Path(output).resolve()
     if output.is_relative_to(SKILL_ROOT):
@@ -47,6 +116,9 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         raise ValueError('HTML output must differ from Markdown source.')
     module_dir = output.parent / 'class-diagrams'
     resource_dir = module_dir / (output.stem + '.assets')
+    source_map = Path(source_map).resolve() if source_map else None
+    if source.is_relative_to(resource_dir) or (source_map and source_map.is_relative_to(resource_dir)):
+        raise ValueError('Markdown and source map inputs must be outside the generated resources directory.')
     if not overwrite and (output.exists() or resource_dir.exists()):
         raise ValueError(f'Output or resources already exist: {output}; use --overwrite.')
     required = ('viewer.html',) + RUNTIME_FILES
@@ -74,7 +146,7 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
             raise ValueError(f'Template must reference {name} exactly once.')
         content = content.replace(original, 'src="' + resource_url + '/' + name + '"')
     source_files = {}
-    mapping = json.loads(Path(source_map).read_text(encoding='utf-8')) if source_map else {}
+    mapping = json.loads(source_map.read_text(encoding='utf-8')) if source_map else {}
     if not isinstance(mapping, dict):
         raise ValueError('Source map must be a JSON object keyed by class name.')
     def validate_location(value, owner=None, method=False):
@@ -93,7 +165,9 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         if 'file' in value:
             if not isinstance(value.get('line'), int) or isinstance(value['line'], bool) or value['line'] < 1:
                 raise ValueError('Source locations require a positive integer line.')
-            origin = (Path(source_map).resolve().parent / value['file']).resolve()
+            origin = (source_map.parent / value['file']).resolve()
+            if origin.is_relative_to(resource_dir):
+                raise ValueError('Source files must be outside the generated resources directory.')
             if value['line'] > len(origin.read_text(encoding='utf-8').splitlines()):
                 raise ValueError(f'Source line exceeds file length: {origin}')
             name = hashlib.sha256(str(origin).encode()).hexdigest()[:12] + '-' + origin.name
@@ -109,42 +183,29 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         for value in methods.values():
             validate_location(value, entry, method=True)
     if require_source_links:
-        missing = []
-        normalize = lambda value: re.sub(r'\s+', '', value).lstrip('+-#~').rstrip('$*')
-        for diagram in diagrams:
-            current = None
-            for line in diagram['source'].splitlines():
-                match = re.match(r'\s*class\s+([\w$]+)\s*(\{)?', line)
-                if match:
-                    name = match[1]
-                    if name not in mapping:
-                        missing.append(name)
-                    current = name if match[2] else None
-                elif line.strip() == '}':
-                    current = None
-                elif current and re.match(r'\s*[+\-#~]?\s*[\w$]+\(', line):
-                    signature = normalize(re.match(r'\s*([+\-#~]?\s*[\w$]+\([^)]*\))', line)[1])
-                    methods = {normalize(key) for key in mapping.get(current, {}).get('methods', {})}
-                    if signature not in methods:
-                        missing.append(current + '.' + signature)
+        missing = missing_source_links(diagrams, mapping)
         if missing:
-            raise ValueError('Missing source links: ' + ', '.join(dict.fromkeys(missing)))
+            raise ValueError('Missing source links: ' + ', '.join(missing))
     mapping_json = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
     content = replace_once(r'<script id="source-map" type="application/json">.*?</script>',
                           '<script id="source-map" type="application/json">' + mapping_json + '</script>', content)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    resource_dir.mkdir(parents=True, exist_ok=True)
     files = list(RUNTIME_FILES)
     if (ASSETS / 'mermaid-third-party-LICENSE.txt').is_file():
         files.append('mermaid-third-party-LICENSE.txt')
-    for name in files:
-        shutil.copyfile(ASSETS / name, resource_dir / name)
-    if source_files:
-        (resource_dir / 'sources').mkdir(exist_ok=True)
-        for name, origin in source_files.items():
-            shutil.copyfile(origin, resource_dir / 'sources' / name)
-    (resource_dir / 'source.md').write_text(markdown, encoding='utf-8')
-    output.write_text(content, encoding='utf-8')
+    module_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.class-diagram-', dir=module_dir) as directory:
+        staged_output = Path(directory) / 'page.html'
+        staged_resources = Path(directory) / 'resources'
+        staged_resources.mkdir()
+        for name in files:
+            shutil.copyfile(ASSETS / name, staged_resources / name)
+        if source_files:
+            (staged_resources / 'sources').mkdir()
+            for name, origin in source_files.items():
+                shutil.copyfile(origin, staged_resources / 'sources' / name)
+        (staged_resources / 'source.md').write_text(markdown, encoding='utf-8')
+        staged_output.write_text(content, encoding='utf-8')
+        publish(output, resource_dir, staged_output, staged_resources, overwrite)
     return len(diagrams)
 
 

@@ -25,4 +25,15 @@
 
 结构检查证明清单、索引、调用策略和版本一致；平台验证证明当前 CLI 接受格式。真实发现、调用和浏览器行为分别记录证据，结果写入 `docs/verification.md` 并注明工具版本与验证范围。
 
-新增发布流程时延续 npm 的版本来源；需要自动版本 PR 时再接入 Changesets。远端推送、标签、市场注册和持久安装按具体任务授权执行。
+## 构建发布包
+
+从已验收的固定提交或版本标签检出一份干净副本，在仓库根目录执行：
+
+```bash
+python3 scripts/check_release.py --install
+python3 scripts/package_plugin.py --output dist
+```
+
+打包脚本读取正式技能清单和 Git 跟踪的技能文件，生成一个双宿主插件 ZIP 和每个技能的独立 ZIP。整包生成标准 Agent Plugins 清单和 Claude Code 本地市场清单，并将技能放在 ZIP 的 `skills/<name>/`。源仓库仍按分类组织。构建版本取自 `package.json` 同步后的插件清单。同一版本的 ZIP 已存在时，用空目录重新构建。
+
+CI 在 Linux 上验证解包、生成、迁移、双宿主安装和技能发现，在 macOS 和 Windows 上验证独立技能解包、生成和迁移。公开分发前由项目版权所有者确认插件代码授权，并随包提供许可证及必要的第三方声明。远端推送、标签、市场注册和持久安装按具体任务授权执行。[OpenAI 插件打包规范](https://developers.openai.com/plugins/build/plugins)

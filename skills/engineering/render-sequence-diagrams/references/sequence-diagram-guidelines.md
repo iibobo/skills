@@ -39,7 +39,7 @@ Markdown 中保留依据和解释；HTML 采用紧凑页头、单行场景导航
 
 ## 源码导航
 
-映射 JSON 包含 `symbols`（与类图相同的 className / methods / methodName / parameterTypes）、`diagrams`（按输入顺序）。每图记录 Mermaid 原文的 SHA-256 `sourceHash`、以参与者 ID 为键的 `participants`，以及按消息箭头出现顺序排列的 `messages`。参与者含 label，消息含 from/to/label；每项含 links 或具体 reason。links 项为 `{text, symbol, method?}`，symbol 指向 symbols 键，method 指向其 methods 键；text 为显示片段。返回、事件、外部服务和概念步骤用 reason 排除，不能自动从同名方法猜测声明。继承方法和重载需要核对源码或同版本二进制。
+映射 JSON 包含 `symbols`（与类图相同的 className / methods / methodName / parameterTypes）、`diagrams`（按输入顺序）。每图记录 Mermaid 原文的 SHA-256 `sourceHash`、以参与者 ID 为键的 `participants`，以及按消息箭头出现顺序排列的 `messages`。参与者填写显示标签；没有别名时用参与者 ID，包括由消息隐式声明的参与者。消息含 from/to/label。每项含 links 或具体 reason。links 项为 `{text, symbol, method?}`，symbol 指向 symbols 键，method 指向其 methods 键；text 为显示片段。返回、事件、外部服务和概念步骤用 reason 排除，不能自动从同名方法猜测声明。继承方法和重载需要核对源码或同版本二进制。
 
 模板为上下参与者类名与消息方法片段建立独立 SVG 链接，使用 data-source-symbol / data-source-method，由新版 IDEA bridge 从清洗过的 source-map 解析目标，忽略任意页面提供的目标 JSON。链式调用分别链接每个方法，片段必须保持连续可读；若 Mermaid 换行拆开方法名，显式 nowrap 该消息并重新核对入口数。
 

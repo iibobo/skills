@@ -21,7 +21,20 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: npm run check
-      - name: Install platform validator
-        run: npm install --global @anthropic-ai/claude-code@2.1.295
+      - name: Install plugin hosts
+        run: npm install --global @anthropic-ai/claude-code@2.1.295 @openai/codex@0.162.0
       - run: claude plugin validate . --strict
       - run: claude plugin validate .claude-plugin/plugin.json --strict
+      - run: python scripts/check_release.py --install
+
+  standalone:
+    strategy:
+      matrix:
+        runner: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/check_release.py

@@ -1,6 +1,6 @@
 {
   "name": "iibobo-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "可复用的工程技能，包含可移植的离线 Mermaid 类图、时序图与流程图工作流。",
   "author": {
     "name": "iibobo"

@@ -109,7 +109,7 @@ python3 /path/to/render-class-diagrams/scripts/render_diagrams.py /path/to/topic
 # 覆盖既有生成文件：追加 --overwrite
 ```
 
-Markdown 是图数据的来源，HTML 的 `diagram-data` 要逐段一致。保留版本、核对依据及省略说明。源码快照按最近一次生成更新；修改 Markdown 后重新运行生成器。
+Markdown 是图数据的来源，HTML 的 `diagram-data` 要逐段一致。保留版本、核对依据及省略说明。`--overwrite` 替换同名 `.assets/`，使快照和可选源码副本与本次输入一致。原始 Markdown、映射和手写资料放在 `.assets/` 外。
 
 交付前用实际浏览器验证受影响行为，不能仅以 HTML 语法通过代替渲染成功：
 
@@ -147,7 +147,7 @@ python3 <skill-directory>/scripts/render_diagrams.py /path/to/topic.md \
   --source-map /path/to/symbols.json --require-source-links
 ```
 
-`--require-source-links` 检查每个显式声明的类及展示方法是否有映射；符号映射无需复制 Java 文件或依赖缓存。普通离线 HTML 保持可查看，点击符号时提示通过 IDEA 的 **Tools → Open Class Diagram with Source Navigation…** 打开。已配对的插件页面通过本地会话接口调用 IDEA 索引；令牌和端口由插件管理，不写入产物。分享 HTML 和资源目录后，新机器需安装兼容插件，并导入图中涉及的依赖。
+`--require-source-links` 检查显式声明的类，以及类块和 `类名 : +方法()` 成员声明中的展示方法。符号映射无需复制 Java 文件或依赖缓存。普通离线 HTML 保持可查看，点击符号时提示通过 IDEA 的 **Tools → Open Class Diagram with Source Navigation…** 打开。已配对的插件页面通过本地会话接口调用 IDEA 索引；令牌和端口由插件管理，不写入产物。分享 HTML 和资源目录后，新机器需安装兼容插件，并导入图中涉及的依赖。
 
 插件属于可选的外部能力，不是技能运行依赖；干净目录生成和离线查看均不要求安装它。IDE 项目缺少依赖时先列出缺项，按用户选择导入导航依赖或采用文件跳转，不自动改变应用依赖。命令行下载 JAR 不等于 IDEA 已导入或完成索引。
 

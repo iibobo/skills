@@ -6,7 +6,13 @@
 
 下面以已检出本仓库为前提，本地命令均从仓库根目录执行。需要从 GitHub 安装时，须先确保远端已包含当前插件文件；本地修改不会自动同步到远端。
 
-三个技能的生成器需要 Python 3.9+，离线页面需要现代浏览器。分发生成的页面时，请保留顶层 HTML 和对应模块目录的相对位置。IDEA 源码跳转需要另装兼容的 Diagram Source Navigator，并在目标项目中索引相关源码或依赖。
+三个技能的生成器兼容 Python 3.9+ 标准库。生产环境和新电脑建议安装仍受维护的 Python 版本，例如 Python 3.12 或 3.14。离线页面需要现代浏览器。分发页面时，请保留顶层 HTML 和对应模块目录的相对位置。IDEA 源码跳转需要另装兼容的 Diagram Source Navigator，并在目标项目中索引相关源码或依赖。[Python 版本支持状态](https://devguide.python.org/versions/)
+
+## 从 ZIP 安装
+
+将 `iibobo-skills-<版本>.zip` 解压到一个保留的目录。解压后的顶层目录包含 `plugin.json`、`.claude-plugin/` 和 `skills/`。进入该目录，执行下文对应宿主的本地市场安装命令。通过 ZIP 安装时无需克隆仓库、保留符号链接或运行 `npm ci`。
+
+如果只安装一个技能，将 `render-<图种>-<版本>.zip` 解压后，把完整技能目录复制到 `~/.agents/skills/`（Codex）或 `~/.claude/skills/`（Claude Code）。新会话中分别用 `$render-<图种>` 或 `/render-<图种>` 调用。Windows 上 `~` 对应当前用户主目录。
 
 ## 插件安装
 
