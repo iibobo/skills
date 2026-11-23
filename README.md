@@ -20,6 +20,18 @@
 
 <img src="docs/images/diagram-source-navigator.jpg" alt="JetBrains Marketplace 中的 Diagram Source Navigator 插件" width="640">
 
+**类图源码跳转**
+
+<img src="docs/images/class-diagram-guided.png" alt="类图源码跳转" width="640">
+
+**时序图源码跳转**
+
+<img src="docs/images/sequences-guided.png" alt="时序图源码跳转" width="640">
+
+**流程图源码跳转**
+
+<img src="docs/images/flowcharts-guided.png" alt="流程图源码跳转" width="640">
+
 **操作演示：打开类图，点击类名或方法跳转到 IDEA 源码。**
 
 ![使用 Diagram Source Navigator 从 Mermaid 类图跳转到 IDEA 中的 Java 类和方法](docs/images/idea-source-navigation.gif)
