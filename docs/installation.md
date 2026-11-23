@@ -6,6 +6,8 @@
 
 下面以已检出本仓库为前提，本地命令均从仓库根目录执行。需要从 GitHub 安装时，须先确保远端已包含当前插件文件；本地修改不会自动同步到远端。
 
+三个技能的生成器需要 Python 3.9+，离线页面需要现代浏览器。分发生成的页面时，请保留顶层 HTML 和对应模块目录的相对位置。IDEA 源码跳转需要另装兼容的 Diagram Source Navigator，并在目标项目中索引相关源码或依赖。
+
 ## 插件安装
 
 ### Codex
@@ -26,6 +28,8 @@ codex plugin marketplace add iibobo/skills
 ```
 
 更新 Git 市场快照时运行 `codex plugin marketplace upgrade iibobo`，再运行上面的插件安装命令。命令语法已对照 Codex CLI 0.162.0 帮助和 [OpenAI 官方插件文档](https://developers.openai.com/plugins/build/plugins)核对；本地安装的实测范围见[验证记录](verification.md)。
+
+若 Codex 安装中断，或安装列表显示已安装但新会话缺少技能，先运行 `codex plugin list` 确认状态。如果仍有已安装记录，先运行 `codex plugin remove iibobo-skills@iibobo`，再重新执行安装命令。随后开启新会话并确认三个技能都出现在选择器中。通过同一客户端执行卸载和重装，让客户端管理缓存与启用状态。
 
 ### Claude Code
 
@@ -61,6 +65,8 @@ $iibobo-skills:render-flowcharts 为指定业务逻辑绘制流程图
 ```
 
 本仓库同时带有插件清单，Codex CLI 0.162.0 实测将仓库技能展示为上述带插件前缀的名称；其他宿主以技能选择器展示的名称为准。
+
+仓库的项目发现需要 Git 检出时保留符号链接。Codex CLI 0.162.0 的市场安装会省略缓存中的项目发现链接，插件通过清单中的实体目录发现技能。若系统或解压工具把链接还原为普通文件，可使用市场插件安装，或从 `skills/engineering/` 复制完整的实体技能目录进行独立安装。
 
 ### Claude Code 临时加载
 

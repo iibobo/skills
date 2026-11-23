@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Checks the bucketed, single-plugin repository convention in this skill.
 // Copy to scripts/check-plugin.mjs and run from the target repository root.
-import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
-import { resolve, relative, isAbsolute } from "node:path";
+import { readFileSync, readdirSync, existsSync, realpathSync, lstatSync, readlinkSync } from "node:fs";
+import { resolve, relative, isAbsolute, sep } from "node:path";
 import { parseDocument } from "yaml";
 
 const root = realpathSync(resolve(process.argv[2] ?? "."));
@@ -15,6 +15,30 @@ const check = (condition, message) => {
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 const json = (path) => JSON.parse(read(path));
 const label = (path) => relative(root, path);
+
+function checkDiscoveryLink(name, skill) {
+  const link = `.agents/skills/${name}`;
+  const path = resolve(root, link);
+  if (!lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink()) {
+    failures.push(`${link}: expected a relative symbolic link to ${skill}`);
+    return;
+  }
+  const target = readlinkSync(path);
+  const expected = relative(resolve(root, ".agents/skills"), resolve(root, skill)).split(sep).join("/");
+  check(target === expected, `${link}: expected target ${expected}, got ${target}`);
+  check(existsSync(resolve(path, "SKILL.md")), `${link}: missing linked SKILL.md`);
+}
+
+function checkPortableFiles(directory) {
+  for (const item of readdirSync(directory, { withFileTypes: true })) {
+    const path = resolve(directory, item.name);
+    if (item.isSymbolicLink()) {
+      failures.push(`${label(path)}: package skill resources as regular files`);
+    } else if (item.isDirectory()) {
+      checkPortableFiles(path);
+    }
+  }
+}
 
 function yamlFile(source, where) {
   const doc = parseDocument(source, { strict: true, uniqueKeys: true });
@@ -123,6 +147,8 @@ try {
       const docs = `docs/${bucket}/${item.name}.md`;
       if (promoted.has(bucket)) {
         expected.add(`./${skill}`);
+        checkDiscoveryLink(item.name, skill);
+        if (item.isDirectory()) checkPortableFiles(resolve(root, skill));
         readmeLink("README.md", `${skill}/SKILL.md`, mode);
         if (existsSync(resolve(root, docs))) {
           const page = read(docs);
