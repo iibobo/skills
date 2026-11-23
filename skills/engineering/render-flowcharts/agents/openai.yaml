@@ -1,4 +1,4 @@
 interface:
   display_name: "绘制可移植流程图"
-  short_description: "梳理步骤、判断、循环和异常路径，生成可迁移的离线 Mermaid 流程图"
-  default_prompt: "使用 $render-flowcharts 为指定业务或代码逻辑绘制流程图，核对判断分支、循环出口与异常路径，生成 Markdown 和可离线查看、导出 SVG 的页面。"
+  short_description: "梳理步骤和分支，生成支持节点源码跳转与 SVG 导出的离线流程图"
+  default_prompt: "使用 $render-flowcharts 为指定业务或代码逻辑绘制流程图，核对判断分支、循环出口与异常路径，生成离线页面，默认映射并验证真实代码节点的源码跳转。"

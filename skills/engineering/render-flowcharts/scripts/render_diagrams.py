@@ -26,13 +26,15 @@ def extract_diagrams(markdown):
     return diagrams
 
 
-def extract_source_map(diagrams):
+def extract_source_map(diagrams, require_source_links=False):
     source_map = {}
     for index, diagram in enumerate(diagrams, start=1):
         directives = re.findall(r'^[ \t]*%%[ \t]+source-map:[ \t]*(.*)$', diagram['source'], re.M)
-        if not directives:
-            continue
         context = f"source-map in diagram {index} ({diagram['title']})"
+        if not directives:
+            if require_source_links:
+                raise ValueError(f'{context}: add a source-map directive for code flowcharts')
+            continue
         if len(directives) != 1:
             raise ValueError(f'{context}: expected one directive per diagram')
         try:
@@ -41,6 +43,8 @@ def extract_source_map(diagrams):
             raise ValueError(f'{context}: {error}') from error
         if not isinstance(entries, dict):
             raise ValueError(f'{context}: expected an object keyed by Mermaid node ID')
+        if require_source_links and not entries:
+            raise ValueError(f'{context}: provide at least one source link')
         for node_id, target in entries.items():
             if not node_id or not isinstance(target, dict) or set(target) != {'className', 'line'}:
                 raise ValueError(f'{context}: {node_id!r} needs className and line')
@@ -54,7 +58,7 @@ def extract_source_map(diagrams):
     return source_map
 
 
-def generate(source, output, title=None, overwrite=False):
+def generate(source, output, title=None, overwrite=False, require_source_links=False):
     source, output = Path(source).resolve(), Path(output).resolve()
     module_dir = output.parent / 'flowcharts'
     resources = module_dir / (output.stem + '.assets')
@@ -69,7 +73,7 @@ def generate(source, output, title=None, overwrite=False):
             raise ValueError(f'Skill package is incomplete: missing assets/{name}')
     markdown = source.read_text(encoding='utf-8')
     diagrams = extract_diagrams(markdown)
-    source_map = extract_source_map(diagrams)
+    source_map = extract_source_map(diagrams, require_source_links)
     heading = re.search(r'^#[ \t]+(.+?)\s*$', markdown, re.M)
     title = title or (heading[1] if heading else source.stem)
     content = (ASSETS / 'viewer.html').read_text(encoding='utf-8')
@@ -98,12 +102,14 @@ def main():
     parser.add_argument('--output', type=Path)
     parser.add_argument('--title')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--require-source-links', action='store_true',
+                        help='Require a non-empty source-map on every flowchart.')
     args = parser.parse_args()
     try:
         source = args.source.resolve()
         output_root = source.parent.parent if source.parent.name == 'flowcharts' else source.parent
         output = (args.output or output_root / source.with_suffix('.html').name).resolve()
-        count = generate(args.source, output, args.title, args.overwrite)
+        count = generate(args.source, output, args.title, args.overwrite, args.require_source_links)
     except (ValueError, OSError) as error:
         parser.exit(1, f'Error: {error}\n')
     print(f'Generated {output.resolve()} ({count} flowcharts).')

@@ -97,7 +97,7 @@ flowchart LR
 ```
 '''
         self.source.write_text(markdown, encoding='utf-8')
-        self.assertEqual(renderer.generate(self.source, self.output), 2)
+        self.assertEqual(renderer.generate(self.source, self.output, require_source_links=True), 2)
         page = self.output.read_text(encoding='utf-8')
         data = json.loads(re.search(r'id="source-map" type="application/json">(.*?)</script>', page, re.S)[1])
         self.assertEqual(data, {
@@ -105,6 +105,18 @@ flowchart LR
             '2:Check': {'className': 'demo.Worker', 'line': 22},
         })
         self.assertEqual((self.output.parent / 'flowcharts/flows.assets/source.md').read_text(encoding='utf-8'), markdown)
+
+    def test_required_source_links_reject_missing_or_empty_maps_per_diagram(self):
+        for directive in ("", "  %% source-map: {}\n"):
+            with self.subTest(directive=directive):
+                markdown = ('# 第一张\n```mermaid\nflowchart TB\n'
+                            '  %% source-map: {"Check":{"className":"demo.Worker","line":3}}\n'
+                            '  Check --> Done\n```\n\n'
+                            f'## 第二张\n```mermaid\nflowchart TB\n{directive}  Check --> Done\n```\n')
+                self.source.write_text(markdown, encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, "source-map in diagram 2"):
+                    renderer.generate(self.source, self.output, require_source_links=True)
+                self.assertFalse(self.output.exists())
 
     def test_malformed_source_maps_do_not_write_output(self):
         for invalid in ('[1]', '{"Check":{"className":"demo..Worker","line":22}}',
