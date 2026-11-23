@@ -28,6 +28,9 @@ class LocalLinks(HTMLParser):
 
 
 def run(*command, cwd, env=None):
+    if command[0] == sys.executable:
+        # Match the pipe decoder even when Windows defaults to a legacy code page.
+        env = dict(os.environ if env is None else env, PYTHONIOENCODING='utf-8')
     process = subprocess.run(command, cwd=cwd, env=env, timeout=90,
                              capture_output=True, text=True, encoding='utf-8')
     if process.returncode:
