@@ -62,7 +62,7 @@
 
 ### 图能生成，却难以搬移和复用
 
-类图技能自带渲染模板和运行资源，统一配色、方法分类和关系标注。生成的 HTML 必须与相邻的同名 `.assets/` 目录一起搬移，才能保留离线查看所需的资源；在页面中可导出当前类图的 SVG。具体要求与成功标准见[使用说明](docs/engineering/render-class-diagrams.md)。
+三个技能都自带离线渲染资源，查看器可以导出当前图的 SVG。搬移时保留顶层 HTML 与 `class-diagrams/`、`sequence-diagrams/` 或 `flowcharts/` 对应模块目录的相对位置。具体目录布局见[安装文档](docs/installation.md)。
 
 ## 输出与隐私
 

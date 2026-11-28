@@ -2,7 +2,7 @@
 // Checks the bucketed, single-plugin repository convention in this skill.
 // Copy to scripts/check-plugin.mjs and run from the target repository root.
 import { readFileSync, readdirSync, existsSync, realpathSync, lstatSync, readlinkSync } from "node:fs";
-import { resolve, relative, isAbsolute, sep } from "node:path";
+import { basename, resolve, relative, isAbsolute, sep } from "node:path";
 import { parseDocument } from "yaml";
 
 const root = realpathSync(resolve(process.argv[2] ?? "."));
@@ -167,6 +167,15 @@ try {
   check(expected.size > 0, "plugin: include at least one useful promoted skill");
   for (const path of expected) check(paths.includes(path), `plugin.json: missing promoted skill ${path}`);
   for (const path of paths) check(expected.has(path), `plugin.json: unexpected or non-promoted skill ${path}`);
+  const discoveryRoot = resolve(root, ".agents/skills");
+  if (existsSync(discoveryRoot)) {
+    const promotedNames = new Set([...expected].map((path) => basename(path)));
+    for (const item of readdirSync(discoveryRoot, { withFileTypes: true })) {
+      if (item.isDirectory() || item.isSymbolicLink()) {
+        check(promotedNames.has(item.name), `.agents/skills/${item.name}: project discovery is limited to promoted skills`);
+      }
+    }
+  }
   if (!failures.length) console.log(`Plugin organisation checks passed (${expected.size} promoted skills).`);
 } catch (error) {
   failures.push(`${label(root) || "repository"}: ${error.message}`);

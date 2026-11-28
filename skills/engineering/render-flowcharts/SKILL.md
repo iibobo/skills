@@ -29,3 +29,5 @@ description: 创建或修改 Mermaid 流程图，梳理处理步骤、条件判�
 ## 文件布局
 
 HTML 统一放在交付目录顶层。含节点映射的 Markdown 放入 `flowcharts/`，审计资料按需放进 `flowcharts/audits/`。运行库、许可证和 Markdown 快照由生成器写入 `flowcharts/<topic>.assets/`。源 Markdown 位于 `flowcharts/` 时，默认在它的上一级生成同名 HTML。搬移时保留 HTML 与模块目录的相对位置。
+
+`--overwrite` 替换对应的 `.assets/` 目录。将输入和手写文件保存在该目录之外。

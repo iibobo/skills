@@ -32,6 +32,8 @@ description: 创建或修改 Mermaid 时序图，梳理调用顺序、同步与�
 
 HTML 统一放在交付目录顶层。将 Markdown、符号映射（如适用）归入 `sequence-diagrams/`，审计资料按需放进模块内的 `audits/`。运行资源由生成器写入 `sequence-diagrams/<topic>.assets/`。源 Markdown 位于该模块目录时，默认在其上一层生成同名 HTML；`--output` 可指定 HTML 路径。迁移时保持模块目录与 HTML 的相对位置。
 
+`--overwrite` 替换对应的 `.assets/` 目录，清理上次生成的映射快照。将输入和手写文件保存在该目录之外。
+
 ## 完成条件
 
 - 真实调用和并发关系有源码或协议依据；概念设计与已实现行为分清。所有展示的错误分支可追溯，未覆盖的错误路径有说明。

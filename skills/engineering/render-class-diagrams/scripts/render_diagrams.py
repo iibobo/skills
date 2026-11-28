@@ -76,11 +76,12 @@ def missing_source_links(diagrams, mapping):
 
 
 def publish(output, resource_dir, staged_output, staged_resources, overwrite):
-    lock = resource_dir.with_name(f'.{resource_dir.name}.lock')
+    # HTML files are siblings even when different skills generate them.
+    lock = output.parent / f'.{output.stem}.assets.lock'
     try:
         lock.mkdir()
     except FileExistsError as error:
-        raise ValueError(f'Another generation is using {resource_dir}; retry after it finishes.') from error
+        raise ValueError(f'Another generation is using {output}; retry after it finishes.') from error
     previous = lock / 'previous'
     try:
         if resource_dir.is_symlink() or (resource_dir.exists() and not resource_dir.is_dir()):
@@ -116,8 +117,9 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
         raise ValueError('HTML output must differ from Markdown source.')
     module_dir = output.parent / 'class-diagrams'
     resource_dir = module_dir / (output.stem + '.assets')
+    resource_location = resource_dir.resolve()
     source_map = Path(source_map).resolve() if source_map else None
-    if source.is_relative_to(resource_dir) or (source_map and source_map.is_relative_to(resource_dir)):
+    if source.is_relative_to(resource_location) or (source_map and source_map.is_relative_to(resource_location)):
         raise ValueError('Markdown and source map inputs must be outside the generated resources directory.')
     if not overwrite and (output.exists() or resource_dir.exists()):
         raise ValueError(f'Output or resources already exist: {output}; use --overwrite.')
@@ -166,7 +168,7 @@ def generate(source, output, title=None, subtitle='类与接口关系图 · 主�
             if not isinstance(value.get('line'), int) or isinstance(value['line'], bool) or value['line'] < 1:
                 raise ValueError('Source locations require a positive integer line.')
             origin = (source_map.parent / value['file']).resolve()
-            if origin.is_relative_to(resource_dir):
+            if origin.is_relative_to(resource_location):
                 raise ValueError('Source files must be outside the generated resources directory.')
             if value['line'] > len(origin.read_text(encoding='utf-8').splitlines()):
                 raise ValueError(f'Source line exceeds file length: {origin}')

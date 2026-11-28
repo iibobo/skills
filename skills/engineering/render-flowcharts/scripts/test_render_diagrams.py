@@ -6,6 +6,7 @@ import re
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location('flowchart_renderer', Path(__file__).with_name('render_diagrams.py'))
 renderer = importlib.util.module_from_spec(SPEC)
@@ -51,6 +52,20 @@ class FlowchartRendererTest(unittest.TestCase):
         self.assertEqual(self.output.read_bytes(), before)
         renderer.generate(self.source, self.output, title='Changed', overwrite=True)
         self.assertIn('<title>Changed</title>', self.output.read_text())
+
+    def test_failed_overwrite_preserves_previous_page_and_resources(self):
+        renderer.generate(self.source, self.output)
+        assets = self.output.parent / 'flowcharts/flows.assets'
+        before = self.output.read_bytes(), (assets / 'source.md').read_bytes()
+        self.source.write_text(self.source.read_text() + '\nChanged guide.\n')
+
+        with patch.object(Path, 'replace', side_effect=PermissionError('Cannot replace page')):
+            with self.assertRaises(PermissionError):
+                renderer.generate(self.source, self.output, title='Changed', overwrite=True)
+
+        self.assertEqual((self.output.read_bytes(), (assets / 'source.md').read_bytes()), before)
+        self.assertEqual(list(assets.parent.iterdir()), [assets])
+        self.assertCountEqual(self.output.parent.iterdir(), [self.output, assets.parent])
 
     def test_user_text_cannot_escape_json_or_trigger_template_replacement(self):
         self.source.write_text('# <标题> @@ASSETS@@\n```mermaid\nflowchart TB\n A["</script><script>alert(1)</script>"]\n```\n')

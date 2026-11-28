@@ -4,6 +4,8 @@ function linkSequenceSources(svg, index) {
   const mapping = JSON.parse(document.getElementById('sequence-links').textContent)[index];
   if (!mapping) return;
   const normalize = value => value.replace(/\s/g, '');
+  // Mermaid renders explicit line breaks as separate SVG text fragments.
+  const sourceLabel = value => normalize(value.replace(/<\/?br\s*\/?>/gi, ''));
   function decorate(text, links) {
     for (const entry of links || []) {
       const owner = symbols[entry.symbol], location = entry.method ? owner.methods[entry.method] : owner;
@@ -32,20 +34,38 @@ function linkSequenceSources(svg, index) {
     }
   }
   for (const text of svg.querySelectorAll('text.actor')) {
-    const item=Object.values(mapping.participants).find(p=>normalize(p.label)===normalize(text.textContent));
-    if(item)decorate(text,item.links);
+    const actor = text.parentElement;
+    const id = actor.getAttribute('name') ||
+      actor.querySelector(':scope > rect.actor[name]')?.getAttribute('name') ||
+      actor.getAttribute('data-id');
+    const matches = id ? [mapping.participants[id]] : Object.values(mapping.participants)
+      .filter(item => sourceLabel(item.label) === normalize(text.textContent));
+    if (matches.length === 1 && matches[0]) decorate(text, matches[0].links);
   }
-  const labels=Array.from(svg.querySelectorAll('.messageText'));
-  const raw=labels.map(text=>normalize(text.textContent).replace(/-$/, ''));
-  let cursor=0;
-  for(const item of mapping.messages){
-    const expected=normalize(item.label);let joined='',end=cursor;
-    while(end<raw.length && joined.length<expected.length)joined+=raw[end++];
-    if(joined!==expected){svg.dataset.sourceLinkError='Message grouping differs from mapping';return;}
-    for(const entry of item.links||[]){
-      const fragment=labels.slice(cursor,end).find(text=>text.textContent.includes(entry.text));
-      if(fragment)decorate(fragment,[entry]);else svg.dataset.sourceLinkError='Method name split by wrapping: '+entry.text;
+  const labels = Array.from(svg.querySelectorAll('.messageText'));
+  const raw = labels.map(text => normalize(text.textContent));
+  let cursor = 0;
+  for (const item of mapping.messages) {
+    const expected = sourceLabel(item.label.replace(/^\s*(?:no)?wrap:\s*/, ''));
+    let offset = 0;
+    let end = cursor;
+    while (end < raw.length && offset < expected.length) {
+      let fragment = raw[end++];
+      // Preserve source hyphens and skip a hyphen added by automatic wrapping.
+      if (!expected.startsWith(fragment, offset) && fragment.endsWith('-')) fragment = fragment.slice(0, -1);
+      if (!expected.startsWith(fragment, offset)) break;
+      offset += fragment.length;
     }
-    cursor=end;
+    if (offset !== expected.length) {
+      svg.dataset.sourceLinkError = 'Message grouping differs from mapping';
+      return;
+    }
+    const fragments = labels.slice(cursor, end);
+    for (const entry of item.links || []) {
+      const fragment = fragments.find(text => text.textContent.includes(entry.text));
+      if (fragment) decorate(fragment, [entry]);
+      else svg.dataset.sourceLinkError = 'Method name split by wrapping: ' + entry.text;
+    }
+    cursor = end;
   }
 }

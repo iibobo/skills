@@ -16,6 +16,7 @@ from zipfile import ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DIAGRAM_SKILLS = {'render-class-diagrams', 'render-flowcharts', 'render-sequence-diagrams'}
 
 
 class LocalLinks(HTMLParser):
@@ -41,14 +42,24 @@ def run(*command, cwd, env=None):
 def check_standalone(archive_path, skill, directory):
     unpacked = directory / 'standalone'
     with ZipFile(archive_path) as archive:
-        assert all(name.startswith(f'{skill}/') for name in archive.namelist())
+        entries = set(archive.namelist())
+        assert all(name.startswith(f'{skill}/') for name in entries), archive_path
+        assert {f'{skill}/SKILL.md', f'{skill}/agents/openai.yaml'} <= entries, archive_path
         archive.extractall(unpacked)
     skill_root = unpacked / skill
+    if skill in DIAGRAM_SKILLS:
+        check_diagram_output(skill_root, directory)
+    else:
+        print(f'{skill}: standalone package passed', flush=True)
+
+
+def check_diagram_output(skill_root, directory):
+    skill = skill_root.name
     source = skill_root / 'assets/example.md'
     expected = source.read_bytes()
     output = directory / 'output' / '示例 图.html'
     run(sys.executable, str(skill_root / 'scripts/render_diagrams.py'), str(source), '--output', str(output), cwd=directory)
-    shutil.rmtree(unpacked)
+    shutil.rmtree(skill_root.parent)
     relocated = directory / 'relocated'
     output.parent.rename(relocated)
     content = (relocated / output.name).read_text(encoding='utf-8')

@@ -33,6 +33,25 @@ class RendererTests(unittest.TestCase):
                 render.generate(md, output, overwrite=True)
             self.assertEqual(first, output.read_bytes())
 
+            md.write_text(md.read_text().replace(',"sourceMap":"map.json"', ''))
+            render.generate(md, output, overwrite=True)
+            assets = root / 'sequence-diagrams/demo.assets'
+            self.assertFalse((assets / 'map.json').exists())
+            self.assertEqual((assets / 'source.md').read_bytes(), md.read_bytes())
+            self.assertTrue((root / 'map.json').is_file())
+
+    def test_source_map_cannot_replace_a_runtime_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'demo.md'
+            source.write_text('```mermaid\nsequenceDiagram\n A->>B: call\n```\n')
+            mapping = root / 'SEQUENCE-NAVIGATION.JS'
+            mapping.write_text('{}')
+
+            with self.assertRaisesRegex(ValueError, 'conflicts with a generated resource'):
+                render.generate(source, root / 'demo.html', source_map=mapping)
+            self.assertFalse((root / 'sequence-diagrams').exists())
+
     def test_missing_mapping_rejected(self):
         with self.assertRaises(ValueError):
             render.validate_mapping([{'source': 'sequenceDiagram'}], {}, True)

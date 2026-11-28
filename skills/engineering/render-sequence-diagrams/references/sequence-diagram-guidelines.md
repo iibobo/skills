@@ -52,7 +52,7 @@ Markdown 中保留依据和解释；HTML 采用紧凑页头、单行场景导航
 
 映射 JSON 包含 `symbols`（与类图相同的 className / methods / methodName / parameterTypes）、`diagrams`（按输入顺序）。每图记录 Mermaid 原文的 SHA-256 `sourceHash`、以参与者 ID 为键的 `participants`，以及按消息箭头出现顺序排列的 `messages`。参与者填写显示标签；没有别名时用参与者 ID，包括由消息隐式声明的参与者。消息含 from/to/label。每项含 links 或具体 reason。links 项为 `{text, symbol, method?}`，symbol 指向 symbols 键，method 指向其 methods 键；text 为显示片段。返回、事件、外部服务和概念步骤用 reason 排除，不能自动从同名方法猜测声明。继承方法和重载需要核对源码或同版本二进制。
 
-模板为上下参与者类名与消息方法片段建立独立 SVG 链接，使用 data-source-symbol / data-source-method，由新版 IDEA bridge 从清洗过的 source-map 解析目标，忽略任意页面提供的目标 JSON。链式调用分别链接每个方法，片段必须保持连续可读；若 Mermaid 换行拆开方法名，显式 nowrap 该消息并重新核对入口数。
+模板为上下参与者类名与消息方法片段建立独立 SVG 链接，使用 data-source-symbol / data-source-method，由新版 IDEA bridge 从清洗过的 source-map 解析目标，忽略任意页面提供的目标 JSON。链式调用分别链接每个方法，片段必须保持连续可读。若自动换行拆开方法名，使用 `A->>B: nowrap: methodName()`，同步更新映射的消息标签和图源哈希，再核对入口数。
 
 `--source-map` 提供映射即启用严格检查；也可在 sequence-viewer 注释加入 `"sourceMap":"symbols.json"`，相对输入 Markdown 解析，使普通重生成保留导航。严格模式核对每图哈希、全部参与者及消息标签覆盖、精确符号引用。模板与生成器变更要检查重复生成字节一致、旧映射拒绝生成、HTML/Markdown/映射快照一致、浏览器入口数与预期一致、导出 SVG 元数据。使用 IDEA 菜单建立会话；普通浏览器只提示，不声称打开成功。插件需支持通用符号键链接；既有仅识别 g.node 的版本需更新。
 

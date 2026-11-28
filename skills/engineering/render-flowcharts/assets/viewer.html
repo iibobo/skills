@@ -143,6 +143,29 @@ function revealTab(index, animate = true) {
   }
 }
 
+function prepareSvg(svg, index) {
+  for (const node of svg.querySelectorAll('g.node')) {
+    const shape = node.querySelector(':scope > .label-container');
+    const role = node.classList.contains('failure') ? 'failure'
+      : node.classList.contains('success') ? 'success' : isFlowchartDecision(shape) ? 'condition' : null;
+    if (shape && role) {
+      // Export clones this SVG, so semantic colors also belong on the shape itself.
+      const parts = shape.matches('g') ? shape.querySelectorAll('path, rect, polygon, circle, ellipse') : [shape];
+      for (const part of parts) {
+        part.style.setProperty('fill', diagramColor(role + '-fill'), 'important');
+        part.style.setProperty('stroke', diagramColor(role + '-stroke'), 'important');
+      }
+    }
+    const nodeId = node.id.match(/-flowchart-(.+)-\d+$/)?.[1];
+    const symbol = (index + 1) + ':' + nodeId;
+    if (nodeId && Object.hasOwn(sourceMap, symbol)) node.dataset.sourceSymbol = symbol;
+  }
+  const direction = diagrams[index].source.match(/^\s*(?:flowchart|graph)\s+(\w+)/)[1];
+  straightenFlowchartEdges(svg, direction, diagrams[index].source);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', diagrams[index].title);
+}
+
 async function select(index) {
   const token = ++revision;
   selected = index;
@@ -166,37 +189,17 @@ async function select(index) {
   status.textContent = '正在绘制流程图…';
 
   try {
-    if (!renderCache.has(index)) {
-      const result = await mermaid.render('flowchart-' + token, diagrams[index].source);
-      renderCache.set(index, result.svg);
-    }
+    const cached = renderCache.get(index);
+    const markup = cached ?? (await mermaid.render('flowchart-' + token, diagrams[index].source)).svg;
     if (token !== revision) return;
-    canvas.innerHTML = renderCache.get(index);
+    canvas.innerHTML = markup;
     const svg = canvas.querySelector('svg');
-    for (const node of svg.querySelectorAll('g.node')) {
-      const shape = node.querySelector(':scope > .label-container');
-      const role = node.classList.contains('failure') ? 'failure'
-        : node.classList.contains('success') ? 'success' : isFlowchartDecision(shape) ? 'condition' : null;
-      if (shape && role) {
-        // Export clones this SVG, so semantic colors also belong on the shape itself.
-        const parts = shape.matches('g') ? shape.querySelectorAll('path, rect, polygon, circle, ellipse') : [shape];
-        for (const part of parts) {
-          part.style.setProperty('fill', diagramColor(role + '-fill'), 'important');
-          part.style.setProperty('stroke', diagramColor(role + '-stroke'), 'important');
-        }
-      }
-      const nodeId = node.id.match(/-flowchart-(.+)-\d+$/)?.[1];
-      const symbol = (index + 1) + ':' + nodeId;
-      if (nodeId && Object.hasOwn(sourceMap, symbol)) node.dataset.sourceSymbol = symbol;
-    }
-    const direction = diagrams[index].source.match(/^\s*(?:flowchart|graph)\s+(\w+)/)[1];
-    straightenFlowchartEdges(svg, direction, diagrams[index].source);
+    if (cached === undefined) prepareSvg(svg, index);
     const { width, height } = svg.viewBox.baseVal;
     if (!width || !height) throw new Error('图表尺寸无效');
     naturalWidth = width;
     naturalHeight = height;
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', diagrams[index].title);
+    if (cached === undefined) renderCache.set(index, canvas.innerHTML);
     status.hidden = true;
     if (fitMode) fit();
     else setZoom(zoom);

@@ -36,4 +36,4 @@ python3 scripts/package_plugin.py --output dist
 
 打包脚本读取正式技能清单和 Git 跟踪的技能文件，生成一个双宿主插件 ZIP 和每个技能的独立 ZIP。整包生成标准 Agent Plugins 清单和 Claude Code 本地市场清单，并将技能放在 ZIP 的 `skills/<name>/`。源仓库仍按分类组织。构建版本取自 `package.json` 同步后的插件清单。同一版本的 ZIP 已存在时，用空目录重新构建。
 
-CI 在 Linux 上验证解包、生成、迁移、双宿主安装和技能发现，在 macOS 和 Windows 上验证独立技能解包、生成和迁移。公开分发前由项目版权所有者确认插件代码授权，并随包提供许可证及必要的第三方声明。远端推送、标签、市场注册和持久安装按具体任务授权执行。[OpenAI 插件打包规范](https://developers.openai.com/plugins/build/plugins)
+CI 在 Linux、macOS 和 Windows 上验证独立技能解包及入口文件，对图表技能额外验证生成和迁移。Linux 同时验证双宿主安装与技能发现。公开分发前由项目版权所有者确认插件代码授权，并随包提供许可证及必要的第三方声明。远端推送、标签、市场注册和持久安装按具体任务授权执行。[OpenAI 插件打包规范](https://developers.openai.com/plugins/build/plugins)

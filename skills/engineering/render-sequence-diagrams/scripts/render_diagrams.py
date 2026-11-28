@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 import re
 import shutil
+from tempfile import TemporaryDirectory
 from urllib.parse import quote
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -92,13 +93,48 @@ def validate_mapping(diagrams, mapping, required):
     return symbols, scenes
 
 
+def publish(output, resource_dir, staged_output, staged_resources, overwrite):
+    # HTML files are siblings even when different skills generate them.
+    lock = output.parent / f'.{output.stem}.assets.lock'
+    try:
+        lock.mkdir()
+    except FileExistsError as error:
+        raise ValueError(f'Another generation is using {output}; retry after it finishes.') from error
+    previous = lock / 'previous'
+    try:
+        if resource_dir.is_symlink() or (resource_dir.exists() and not resource_dir.is_dir()):
+            raise ValueError(f'Expected a regular generated resources directory: {resource_dir}')
+        if not overwrite and (output.exists() or resource_dir.exists()):
+            raise ValueError(f'Output or resources already exist: {output}; use --overwrite.')
+        if resource_dir.exists():
+            resource_dir.rename(previous)
+        installed = False
+        try:
+            staged_resources.rename(resource_dir)
+            installed = True
+            staged_output.replace(output)
+        except BaseException:
+            if installed:
+                resource_dir.rename(staged_resources)
+            if previous.exists():
+                previous.rename(resource_dir)
+            raise
+        if previous.exists():
+            shutil.rmtree(previous)
+    finally:
+        # Preserve the backup if a filesystem failure also prevented rollback.
+        if not previous.exists():
+            lock.rmdir()
+
+
 def generate(source, output, title=None, overwrite=False, source_map=None, require_source_links=False):
     source, output = Path(source).resolve(), Path(output).resolve()
     module_dir = output.parent / 'sequence-diagrams'
     resources = module_dir / (output.stem + '.assets')
+    resource_location = resources.resolve()
     if output == source or output.is_relative_to(SKILL_ROOT) or output.suffix.lower() != '.html':
         raise ValueError('Use an .html output outside the skill directory, distinct from the source.')
-    if source.is_relative_to(resources):
+    if source.is_relative_to(resource_location):
         raise ValueError('Markdown input must be outside the generated resources directory.')
     if not overwrite and (output.exists() or resources.exists()):
         raise ValueError('Output or resources already exist; use --overwrite.')
@@ -118,7 +154,16 @@ def generate(source, output, title=None, overwrite=False, source_map=None, requi
     if source_map is None and settings.get('sourceMap'):
         source_map = source.parent / settings['sourceMap']
     require_source_links = require_source_links or source_map is not None
-    mapping = json.loads(Path(source_map).read_text(encoding='utf-8')) if source_map else {}
+    if source_map is not None:
+        source_map = Path(source_map)
+        map_location = source_map.resolve()
+        if map_location == output:
+            raise ValueError('HTML output must differ from the source map.')
+        if map_location.is_relative_to(resource_location):
+            raise ValueError('Source map input must be outside the generated resources directory.')
+        if source_map.name.casefold() in {name.casefold() for name in (*RUNTIME_FILES, 'source.md')}:
+            raise ValueError(f'Source map name conflicts with a generated resource: {source_map.name}')
+    mapping = json.loads(source_map.read_text(encoding='utf-8')) if source_map else {}
     symbols, scenes = validate_mapping(diagrams, mapping, require_source_links)
     encode = lambda value: json.dumps(value, ensure_ascii=False).replace('<', chr(92) + 'u003c')
     source_link = source if source.parent == module_dir else resources / 'source.md'
@@ -133,14 +178,19 @@ def generate(source, output, title=None, overwrite=False, source_map=None, requi
     }
     # One substitution pass prevents user text from being treated as template tokens.
     content = re.sub(r'@@(?:TITLE|ASSETS|SOURCE|DIAGRAMS|INITIAL_ZOOM|SOURCE_MAP|SEQUENCE_LINKS)@@', lambda m: replacements[m[0]], content)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    resources.mkdir(parents=True, exist_ok=True)
-    for name in RUNTIME_FILES:
-        shutil.copyfile(ASSETS / name, resources / name)
-    if source_map:
-        (resources / Path(source_map).name).write_text(json.dumps(mapping, ensure_ascii=False, indent=2), encoding='utf-8')
-    (resources / 'source.md').write_text(markdown, encoding='utf-8')
-    output.write_text(content, encoding='utf-8')
+    module_dir.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix='.render-', dir=module_dir) as directory:
+        staged_output = Path(directory) / 'page.html'
+        staged_resources = Path(directory) / 'resources'
+        staged_resources.mkdir()
+        for name in RUNTIME_FILES:
+            shutil.copyfile(ASSETS / name, staged_resources / name)
+        if source_map:
+            (staged_resources / source_map.name).write_text(
+                json.dumps(mapping, ensure_ascii=False, indent=2), encoding='utf-8')
+        (staged_resources / 'source.md').write_text(markdown, encoding='utf-8')
+        staged_output.write_text(content, encoding='utf-8')
+        publish(output, resources, staged_output, staged_resources, overwrite)
     return len(diagrams)
 
 

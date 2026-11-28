@@ -24,3 +24,74 @@ reduced=true;position=300;fire('pointerdown');fire('pointermove',{clientX:200});
 '''
         source = pathlib.Path(__file__).resolve().parents[1] / 'assets/sequence-navigation.js'
         subprocess.run(['node', '-e', script, str(source)], check=True)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is only needed for navigation development tests')
+    def test_source_links_use_actor_ids_and_follow_wrapped_messages(self):
+        script = r'''
+const {readFileSync} = require('node:fs');
+const {runInNewContext} = require('node:vm');
+const assert = require('node:assert/strict');
+
+const links = [];
+function text(parts, actorId, participant) {
+    return {
+        parts,
+        textContent: parts.join(''),
+        parentElement: {
+            getAttribute: name => name === 'name' && !participant ? actorId : null,
+            querySelector: () => participant ? {getAttribute: () => actorId} : null,
+        },
+    };
+}
+const actors = [
+    text(['Worker', 'handler'], 'A', true), text(['Worker', 'handler'], 'B', false),
+    text(['Worker', 'handler'], 'A', true), text(['Worker', 'handler'], 'B', false),
+];
+const messages = [
+    text(['start()-']), text(['retry()']), text(['extraordi-']),
+    text(['nary work']), text(['finish()']),
+];
+const mapping = {
+    participants: {
+        A: {label: 'Worker<br/>handler', links: [{text: 'Worker', symbol: 'A'}]},
+        B: {label: 'Worker<br/>handler', links: [{text: 'Worker', symbol: 'B'}]},
+    },
+    messages: [
+        {label: 'start()-<br/>retry()', links: [{text: 'retry', symbol: 'B', method: 'retry'}]},
+        {label: 'extraordinary work'},
+        {label: 'nowrap: finish()', links: [{text: 'finish', symbol: 'A', method: 'finish'}]},
+    ],
+};
+const symbols = {
+    A: {className: 'example.First', methods: {finish: {methodName: 'finish', parameterTypes: []}}},
+    B: {className: 'example.Second', methods: {retry: {methodName: 'retry', parameterTypes: []}}},
+};
+const svg = {
+    dataset: {},
+    querySelectorAll: selector => selector === 'text.actor' ? actors : messages,
+};
+const document = {
+    getElementById: id => ({textContent: JSON.stringify(id === 'source-map' ? symbols : [mapping])}),
+    createElementNS: () => ({dataset: {}, classList: {add() {}}, setAttribute() {}, append() {}, addEventListener() {}}),
+    createTextNode: value => value,
+    createTreeWalker: element => {
+        const nodes = element.parts.map(textContent => ({
+            textContent,
+            parentElement: {closest: () => null},
+            replaceWith: (before, link) => links.push(link.dataset),
+        }));
+        return {nextNode() { this.currentNode = nodes.shift(); return this.currentNode; }};
+    },
+};
+const context = {document, NodeFilter: {SHOW_TEXT: 4}};
+runInNewContext(readFileSync(process.argv[1], 'utf8'), context);
+context.linkSequenceSources(svg, 0);
+
+assert.equal(svg.dataset.sourceLinkError, undefined);
+assert.deepEqual(links.map(link => [link.sourceSymbol, link.sourceMethod]), [
+    ['A', undefined], ['B', undefined], ['A', undefined], ['B', undefined],
+    ['B', 'retry'], ['A', 'finish'],
+]);
+'''
+        source = pathlib.Path(__file__).resolve().parents[1] / 'assets/sequence-source-links.js'
+        subprocess.run(['node', '-e', script, str(source)], check=True)
