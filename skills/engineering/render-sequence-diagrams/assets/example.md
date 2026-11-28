@@ -18,9 +18,13 @@ sequenceDiagram
     alt 商品有效
         API->>DB: insertOrder(items)
         DB-->>API: orderId
-        API-->>User: 订单已创建(orderId)
+        rect rgb(220, 252, 231)
+            API-->>User: 订单已创建(orderId)
+        end
     else 商品无效
-        API-->>User: 参数错误
+        rect rgb(254, 226, 226)
+            API-->>User: 参数错误
+        end
     end
     deactivate API
 ```

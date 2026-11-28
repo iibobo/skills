@@ -24,12 +24,20 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
 .legend-items strong{color:var(--ink);font-weight:650}
 .legend-key{display:grid;place-items:center;flex:0 0 64px;color:var(--ink);font-size:11px;white-space:nowrap}
 .legend-key svg{width:38px;height:22px}
-.legend-key .node-shape{fill:#e7f2ff;stroke:#6b8bb7}
-.legend-key .signal{fill:none;stroke:#53657e;stroke-width:1.4;stroke-linejoin:round}
-.legend-key .arrowhead{fill:#53657e}
-.legend-key .decision{fill:#fff4cc;stroke:#ae9342}
-.legend-key .success{fill:#dcfce7;stroke:#42815a}
-.legend-key .failure{fill:#fee2e2;stroke:#b86a6a}
+:root{
+  --diagram-node-fill:#e7f2ff;--diagram-node-stroke:#6b8bb7;
+  --diagram-condition-fill:#fff4cc;--diagram-condition-stroke:#ae9342;
+  --diagram-success-fill:#dcfce7;--diagram-success-stroke:#42815a;
+  --diagram-failure-fill:#fee2e2;--diagram-failure-stroke:#b86a6a;
+  --diagram-signal:#53657e;--diagram-text:#292735;
+}
+.legend-key .node-shape{fill:var(--diagram-node-fill);stroke:var(--diagram-node-stroke)}
+.legend-key .node-outline{fill:none;stroke:var(--diagram-node-stroke)}
+.legend-key .signal{fill:none;stroke:var(--diagram-signal);stroke-width:1.4;stroke-linejoin:round}
+.legend-key .arrowhead{fill:var(--diagram-signal)}
+.legend-key .decision{fill:var(--diagram-condition-fill);stroke:var(--diagram-condition-stroke)}
+.legend-key .success{fill:var(--diagram-success-fill);stroke:var(--diagram-success-stroke)}
+.legend-key .failure{fill:var(--diagram-failure-fill);stroke:var(--diagram-failure-stroke)}
 @media(max-width:640px){header{flex-wrap:wrap;gap:6px}.header-copy{flex-basis:100%}}
 </style></head><body>
 <header><div class="header-copy"><h1>@@TITLE@@</h1><p><a href="@@SOURCE@@">阅读 Markdown 源文件</a> · 拖动画布 · Shift + 滚轮缩放</p></div>
@@ -40,7 +48,7 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="2" y="4" width="34" height="14"/></svg></span><span><strong>处理步骤</strong>　执行一个操作。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="decision" d="M19 2 36 11 19 20 2 11Z"/></svg></span><span><strong>条件判断</strong>　按箭头旁的条件选择出口。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="node-shape" d="M9 4H36L29 18H2Z"/></svg></span><span><strong>输入与输出</strong>　平行四边形表示进入或离开流程的数据。</span></li>
-  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="2" y="4" width="34" height="14"/><path class="signal" d="M7 4V18M31 4V18"/></svg></span><span><strong>子流程</strong>　两侧内竖线表示这里调用或展开一段独立流程。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="2" y="4" width="34" height="14"/><path class="node-outline" d="M7 4V18M31 4V18"/></svg></span><span><strong>子流程</strong>　两侧内竖线表示这里调用或展开一段独立流程。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="node-shape" d="M7 6C7 1 31 1 31 6V16C31 21 7 21 7 16Z M7 6C7 11 31 11 31 6"/></svg></span><span><strong>持久化存储</strong>　表示数据库或其他持久化存储。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" d="M2 11H32"/><path class="arrowhead" d="M29 7 36 11 29 15Z"/></svg></span><span><strong>流程方向</strong>　沿箭头读下一步，指回前序节点表示重复。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="success" x="1" y="6" width="16" height="10" rx="5"/><rect class="failure" x="21" y="6" width="16" height="10" rx="5"/></svg></span><span><strong>结果颜色</strong>　绿色表示正常完成，红色表示失败或拒绝。</span></li>
@@ -57,6 +65,9 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
 <script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script>
 <script>
 'use strict';
+
+const diagramPalette = getComputedStyle(document.documentElement);
+const diagramColor = token => diagramPalette.getPropertyValue('--diagram-' + token).trim();
 
 const legend = document.getElementById('diagram-legend');
 document.addEventListener('click', event => {
@@ -163,6 +174,17 @@ async function select(index) {
     canvas.innerHTML = renderCache.get(index);
     const svg = canvas.querySelector('svg');
     for (const node of svg.querySelectorAll('g.node')) {
+      const shape = node.querySelector(':scope > .label-container');
+      const role = node.classList.contains('failure') ? 'failure'
+        : node.classList.contains('success') ? 'success' : isFlowchartDecision(shape) ? 'condition' : null;
+      if (shape && role) {
+        // Export clones this SVG, so semantic colors also belong on the shape itself.
+        const parts = shape.matches('g') ? shape.querySelectorAll('path, rect, polygon, circle, ellipse') : [shape];
+        for (const part of parts) {
+          part.style.setProperty('fill', diagramColor(role + '-fill'), 'important');
+          part.style.setProperty('stroke', diagramColor(role + '-stroke'), 'important');
+        }
+      }
       const nodeId = node.id.match(/-flowchart-(.+)-\d+$/)?.[1];
       const symbol = (index + 1) + ':' + nodeId;
       if (nodeId && Object.hasOwn(sourceMap, symbol)) node.dataset.sourceSymbol = symbol;
@@ -412,15 +434,15 @@ if (typeof mermaid === 'undefined') {
     htmlLabels: false,
     fontFamily: 'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',
     themeVariables: {
-      primaryColor: '#e7f2ff',
-      primaryBorderColor: '#6b8bb7',
-      primaryTextColor: '#292735',
-      lineColor: '#53657e',
+      primaryColor: diagramColor('node-fill'),
+      primaryBorderColor: diagramColor('node-stroke'),
+      primaryTextColor: diagramColor('text'),
+      lineColor: diagramColor('signal'),
       edgeLabelBackground: '#f6f5fa',
       clusterBkg: '#f6f5fa',
       clusterBorder: '#d9d5e5',
     },
-    flowchart: { useMaxWidth: false, htmlLabels: false, curve: 'linear', wrappingWidth: 240 },
+    flowchart: { useMaxWidth: false, htmlLabels: false, curve: 'linear', wrappingWidth: 210 },
   });
   select(0);
 }

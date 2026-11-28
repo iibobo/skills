@@ -22,27 +22,43 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
 .legend-items strong{color:var(--ink);font-weight:650}
 .legend-key{display:grid;place-items:center;flex:0 0 64px;color:var(--ink);font-size:11px;white-space:nowrap}
 .legend-key svg{width:38px;height:22px}
-.legend-key .node-shape{fill:#e7f2ff;stroke:#6b8bb7}
-.legend-key .signal{fill:none;stroke:#53657e;stroke-width:1.4;stroke-linejoin:round}
-.legend-key .arrowhead{fill:#53657e}
-.legend-key .decision{fill:#fff4cc;stroke:#ae9342}
-.legend-key .success{fill:#dcfce7;stroke:#42815a}
-.legend-key .failure{fill:#fee2e2;stroke:#b86a6a}
+:root{
+  --diagram-node-fill:#e7f2ff;--diagram-node-stroke:#6b8bb7;
+  --diagram-condition-fill:#fff4cc;--diagram-condition-stroke:#ae9342;
+  --diagram-success-fill:#dcfce7;
+  --diagram-failure-fill:#fee2e2;
+  --diagram-signal:#53657e;--diagram-text:#292735;
+  --diagram-activation-fill:#cfe3ff;
+  --diagram-loop-fill:#f1e9ff;--diagram-loop-stroke:#7b5fa6;
+  --diagram-parallel-fill:#def6f2;--diagram-parallel-stroke:#3d8077;
+}
+.legend-key .node-shape{fill:var(--diagram-node-fill);stroke:var(--diagram-node-stroke)}
+.legend-key .signal{fill:none;stroke:var(--diagram-signal);stroke-width:1.4;stroke-linejoin:round}
+.legend-key .arrowhead{fill:var(--diagram-signal)}
+.legend-key .decision{fill:var(--diagram-condition-fill);stroke:var(--diagram-condition-stroke)}
+.legend-key .success{fill:var(--diagram-success-fill)}
+.legend-key .failure{fill:var(--diagram-failure-fill)}
+.legend-key .lifeline{fill:none;stroke:var(--diagram-node-stroke)}
+.legend-key .activation{fill:var(--diagram-activation-fill);stroke:var(--diagram-node-stroke)}
+.legend-key .loop{fill:var(--diagram-loop-fill);stroke:var(--diagram-loop-stroke)}
+.legend-key .parallel{fill:var(--diagram-parallel-fill);stroke:var(--diagram-parallel-stroke)}
+.legend-key .fragment-frame{fill:none;stroke-dasharray:2 2}
 @media(max-width:640px){header{flex-wrap:wrap;gap:6px}.header-copy{flex-basis:100%}}
 </style></head><body>
 <header><div class="header-copy"><h1>@@TITLE@@</h1><p>调用顺序 · 消息交互 · 分支与循环 · <a href="@@SOURCE@@">阅读 Markdown 源文件</a> · Shift + 滚轮缩放</p></div>
 <details class="diagram-legend" id="diagram-legend">
 <summary>时序图图例</summary>
 <ul class="legend-items">
-  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="7" y="1" width="24" height="8"/><path stroke="#6b8bb7" d="M19 9V22"/></svg></span><span><strong>参与者与生命线</strong>　方框或人物表示参与者，竖线沿时间向下。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="2" y="2" width="15" height="7"/><path class="lifeline" d="M9.5 9V22M27 7V14M23 10H31M24 18L27 14L30 18M27 18V22"/><circle class="node-shape" cx="27" cy="4.5" r="2.5"/></svg></span><span><strong>参与者与生命线</strong>　方框或人物表示参与者，竖线沿时间向下。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" d="M2 11H32"/><path class="arrowhead" d="M29 7 36 11 29 15Z"/></svg></span><span><strong>实线箭头</strong>　表示调用或事件，如订阅回调。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" stroke-dasharray="4 2" d="M2 11H32"/><path class="arrowhead" d="M29 7 36 11 29 15Z"/></svg></span><span><strong>虚线箭头</strong>　表示返回结果。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><path class="signal" d="M2 11H35M29 7 35 11 29 15"/></svg></span><span><strong>开放箭头</strong>　表示异步投递，完成情况由后续消息说明。</span></li>
-  <li><span class="legend-key" aria-hidden="true"><code>alt / else</code></span><span><strong>条件分支</strong>　按条件进入一个互斥分支。</span></li>
-  <li><span class="legend-key" aria-hidden="true"><code>loop</code></span><span><strong>循环</strong>　按框内条件或次数重复消息。</span></li>
-  <li><span class="legend-key" aria-hidden="true"><code>opt / par</code></span><span><strong>可选与并行</strong>　opt 按条件执行，par 内的分段可并行。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="decision fragment-frame" x="3" y="3" width="32" height="16"/><path class="decision" d="M3 3H15V7L12 10H3Z"/></svg></span><span><strong>条件片段</strong>　alt / else 表示互斥分支，opt 表示可选步骤。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="loop fragment-frame" x="3" y="3" width="32" height="16"/><path class="loop" d="M3 3H15V7L12 10H3Z"/></svg></span><span><strong>循环片段</strong>　loop 按框内条件或次数重复消息。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="parallel fragment-frame" x="3" y="3" width="32" height="16"/><path class="parallel" d="M3 3H15V7L12 10H3Z"/></svg></span><span><strong>并行片段</strong>　par / and 内的各段可并行。</span></li>
   <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="decision" x="4" y="3" width="30" height="16"/><path class="signal" d="M9 9H29M9 13H25"/></svg></span><span><strong>注释</strong>　补充说明、约束或假设。</span></li>
-  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="node-shape" x="16" y="3" width="6" height="16"/><path class="signal" d="M19 0V3M19 19V22"/></svg></span><span><strong>激活条</strong>　窄条标出参与者的处理区间。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="activation" x="16" y="3" width="6" height="16"/><path class="signal" d="M19 0V3M19 19V22"/></svg></span><span><strong>激活条</strong>　窄条标出参与者的处理区间。</span></li>
+  <li><span class="legend-key" aria-hidden="true"><svg viewBox="0 0 38 22" focusable="false"><rect class="success" x="1" y="6" width="16" height="10"/><rect class="failure" x="21" y="6" width="16" height="10"/></svg></span><span><strong>结果色块</strong>　绿色标记明确成功，红色标记失败或拒绝。</span></li>
   <li><span class="legend-key" aria-hidden="true"><code>1 · 2 · 3</code></span><span><strong>消息编号</strong>　按编号追踪消息顺序。</span></li>
 </ul>
 </details>
@@ -54,6 +70,9 @@ header{position:relative;z-index:2;display:flex;align-items:flex-start;justify-c
 <script src="@@ASSETS@@/sequence-navigation.js"></script>
 <script id="diagram-data" type="application/json">@@DIAGRAMS@@</script><script src="@@ASSETS@@/mermaid-12.3.0.min.js"></script><script>
 'use strict';
+
+const diagramPalette = getComputedStyle(document.documentElement);
+const diagramColor = token => diagramPalette.getPropertyValue('--diagram-' + token).trim();
 
 const legend = document.getElementById('diagram-legend');
 document.addEventListener('click', event => {
@@ -88,7 +107,30 @@ function fit(){
   setZoom(Math.min(1,availableWidth/naturalWidth,availableHeight/naturalHeight));
   viewport.scrollTo(0,0);
 }
-function showResult(result,index){canvas.innerHTML=result.svg;const svg=canvas.querySelector('svg');linkSequenceSources(svg,index);svg.setAttribute('role','group');svg.setAttribute('aria-label',diagrams[index].title);const viewBox=svg.viewBox.baseVal;naturalWidth=viewBox.width;naturalHeight=viewBox.height;status.hidden=true;fitMode=false;setZoom(zoom);viewport.scrollTo(0,0);controls.forEach(b=>b.disabled=false);}
+function paintSequenceSemantics(svg) {
+  const asyncMarker = svg.querySelector('marker[id$="-filled-head"]');
+  if (asyncMarker) {
+    asyncMarker.setAttribute('markerUnits', 'userSpaceOnUse');
+    asyncMarker.setAttribute('markerWidth', '12');
+    asyncMarker.setAttribute('markerHeight', '10');
+    asyncMarker.setAttribute('refX', '9');
+    asyncMarker.setAttribute('refY', '5');
+    const head = asyncMarker.querySelector('path');
+    head.setAttribute('d', 'M1 1L9 5L1 9');
+    head.style.setProperty('fill', 'none', 'important');
+    head.style.setProperty('stroke', diagramColor('signal'), 'important');
+    head.style.strokeWidth = '1.5';
+  }
+  for (const fragment of svg.querySelectorAll('g[data-et="control-structure"]')) {
+    const type = fragment.querySelector('.labelText')?.textContent.trim().toLowerCase();
+    const role = type === 'loop' ? 'loop' : type === 'par' || type === 'par over' ? 'parallel' : 'condition';
+    const border = diagramColor(role + '-stroke');
+    for (const boundary of fragment.querySelectorAll('.loopLine, .labelBox')) boundary.style.stroke = border;
+    const tab = fragment.querySelector('.labelBox');
+    if (tab) tab.style.fill = diagramColor(role + '-fill');
+  }
+}
+function showResult(result,index){canvas.innerHTML=result.svg;const svg=canvas.querySelector('svg');paintSequenceSemantics(svg);linkSequenceSources(svg,index);svg.setAttribute('role','group');svg.setAttribute('aria-label',diagrams[index].title);const viewBox=svg.viewBox.baseVal;naturalWidth=viewBox.width;naturalHeight=viewBox.height;status.hidden=true;fitMode=false;setZoom(zoom);viewport.scrollTo(0,0);controls.forEach(b=>b.disabled=false);}
 async function select(index){
   selected=index;const sequence=++renderSequence;document.getElementById('title').textContent=diagrams[index].title;
   tabs.querySelectorAll('button').forEach((b,i)=>{b.setAttribute('aria-selected',String(i===index));b.tabIndex=i===index?0:-1;});
@@ -172,5 +214,25 @@ document.getElementById('export').onclick=()=>{
   const blob=new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n',new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sequence-diagram-'+(selected+1)+'.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请保留 HTML 与图类型目录的相对位置。';document.body.dataset.renderError='true';}
-else{mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',look:'classic',fontFamily:'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',themeVariables:{primaryColor:'#e7f2ff',primaryBorderColor:'#6b8bb7',primaryTextColor:'#292735',actorBkg:'#e7f2ff',actorBorder:'#6b8bb7',actorTextColor:'#292735',noteBkgColor:'#fff5ad',noteTextColor:'#333333',signalColor:'#53657e',signalTextColor:'#292735'},sequence:{useMaxWidth:false,wrap:true,mirrorActors:true,height:65,width:150,actorFontSize:14}});select(0);}
+else {
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'strict',
+    theme: 'base',
+    look: 'classic',
+    fontFamily: 'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',
+    themeVariables: {
+      primaryColor: diagramColor('node-fill'), primaryBorderColor: diagramColor('node-stroke'),
+      primaryTextColor: diagramColor('text'), actorBkg: diagramColor('node-fill'),
+      actorBorder: diagramColor('node-stroke'), actorLineColor: diagramColor('node-stroke'),
+      actorTextColor: diagramColor('text'), noteBkgColor: diagramColor('condition-fill'),
+      noteBorderColor: diagramColor('condition-stroke'), noteTextColor: diagramColor('text'),
+      activationBkgColor: diagramColor('activation-fill'), activationBorderColor: diagramColor('node-stroke'),
+      labelBoxBkgColor: diagramColor('condition-fill'), labelBoxBorderColor: diagramColor('condition-stroke'),
+      signalColor: diagramColor('signal'), signalTextColor: diagramColor('text'),
+    },
+    sequence: {useMaxWidth: false, wrap: true, mirrorActors: true, height: 65, width: 150, actorFontSize: 14},
+  });
+  select(0);
+}
 </script></body></html>
