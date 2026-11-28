@@ -8,7 +8,7 @@
     {
       "name": "iibobo-skills",
       "source": "./",
-      "description": "可复用的工程技能，包含可移植的离线 Mermaid 类图、时序图与流程图工作流。"
+      "description": "绘制 Mermaid 类图、时序图和流程图，支持离线 HTML、SVG 导出和 Java 源码跳转。"
     }
   ]
 }

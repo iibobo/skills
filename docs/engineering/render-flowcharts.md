@@ -1,32 +1,22 @@
-# render-flowcharts
+# 流程图
 
 ## What it does
 
-绘制或修改 Mermaid 流程图，表达处理步骤、条件判断、分支、循环、异常和子流程。输出 Markdown、可离线查看的 HTML 与模块资源目录；页面沿用类图和时序图的紧凑布局，支持多图切换、工具栏折叠、适应画布、Shift + 滚轮缩放、鼠标拖动画布、全屏和 SVG 导出。
+表达步骤、条件、循环、异常和子流程。真实代码的 HTML 默认支持从关键节点跳到 Java 源码行。
 
 ## When to reach for it
 
-梳理业务规则、算法和控制逻辑，核对不同条件下的处理路径时使用。跨参与者消息顺序选择 [render-sequence-diagrams](render-sequence-diagrams.md)，静态类型关系选择 [render-class-diagrams](render-class-diagrams.md)。
-
-生成需要 Python 3.9+，查看需要现代浏览器；运行库随技能提供，无需联网或安装 Node.js。真实系统根据源码或业务规则作图，概念设计会说明假设和省略范围。
+解释业务规则、算法或控制逻辑时使用。复杂流程先拆成总览和子流程。
 
 ## Common questions
 
-- **需要先排布局吗？** 简单图直接起稿，出现多级判断、回边或多处汇合时先排主链、同层分支和侧边通道，再补标签并渲染验证。
-
-- **如何调用？** Codex 插件中使用 `$iibobo-skills:render-flowcharts`，独立安装时使用 `$render-flowcharts`；Claude Code 插件中使用 `/iibobo-skills:render-flowcharts`。安装和更新见[安装文档](../installation.md)。
-- **怎样描述任务？** 例如：“根据当前订单处理逻辑画流程图，标出库存不足、保存失败和重试出口，输出离线 HTML。”
-- **支持哪些源码？** 支持带方向的 `flowchart` 和兼容别名 `graph` Mermaid 代码块；可使用纵向或横向布局。
-- **能否只要 Mermaid？** 可以，明确要求片段或 Markdown 即可。
-- **如何搬移？** 同时复制顶层 `.html` 与 `flowcharts/` 模块目录。技能文件夹也可单独复制使用。
-- **支持 IDEA 跳转吗？** 在 Mermaid 图块内添加 `%% source-map:` 注释，用节点 ID 映射 Java 全限定类名和从 1 开始的行号。用支持流程图行号的 Diagram Source Navigator 插件打开生成的 HTML，即可点击节点定位。见[配置示例](../../skills/engineering/render-flowcharts/references/flowchart-guidelines.md#源码跳转)。
+- **支持哪些图源？** 支持带方向的 `flowchart` 或 `graph`。调用方式见[安装文档](../installation.md)。
+- **如何配置源码入口？** 在 Mermaid 图块中按节点 ID 填写全限定类名与行号。见[映射示例](../../skills/engineering/render-flowcharts/references/flowchart-guidelines.md#源码跳转)。
 
 ## It's working if
 
-每个判断出口的条件清晰，循环有停止条件或明确的持续运行语义，错误和提前返回路径有交代。所有图均能渲染、切换和缩放，导出 SVG 可独立查看；产物迁移后可离线打开，图源码与 Markdown 一致。
+各判断有清晰的条件，回边与异常有明确落点，每张图可独立读清。
 
 ## Where it fits
 
-这是 `engineering` 分类中的正式技能，支持自动发现和显式调用。[SKILL.md](../../skills/engineering/render-flowcharts/SKILL.md) 维护执行步骤，规范、示例、脚本、模板与运行库保留在技能目录内，可与其他绘图技能分别分发。
-
-导航标签支持原生横向滚动、触控板滚动和鼠标惯性拖动。滑动浏览标签，点击选择图表；左右按钮与键盘仍可切图。滚动条隐藏，选中标签平滑进入可见区域，减少动态效果时停用额外惯性。
+[技能入口](../../skills/engineering/render-flowcharts/SKILL.md)包含布局、生成和验收步骤。跨参与者的消息先后使用[时序图](render-sequence-diagrams.md)。

@@ -1,27 +1,22 @@
-# render-sequence-diagrams
+# 时序图
 
 ## What it does
 
-绘制或修改 Mermaid 时序图，说明参与者之间的调用顺序、返回、异步消息、分支、循环及并行处理。输出 Markdown、可离线查看的 HTML 和模块资源目录，页面支持多图切换、缩放、适应整图及 SVG 导出。
+展示参与者之间的调用、返回、异步投递、分支和并行关系。真实代码的 HTML 默认支持参与者和方法跳转。
 
 ## When to reach for it
 
-梳理请求链路、业务交互、回调或消息消费流程时使用。需要静态类型继承与接口实现关系时，选择 [render-class-diagrams](render-class-diagrams.md)。
-
-生成需要 Python 3.9+，查看需要现代浏览器；运行库随技能提供，无需联网或安装 Node.js。真实系统的调用顺序需要可读取的源码、协议或跟踪记录作为依据；概念设计会注明假设。
+解释请求链路、回调、业务交互或消息消费时使用。
 
 ## Common questions
 
-- **如何调用？** Codex 插件中使用 `$iibobo-skills:render-sequence-diagrams`，独立安装时使用 `$render-sequence-diagrams`；Claude Code 插件中使用 `/iibobo-skills:render-sequence-diagrams`。安装和更新见[安装文档](../installation.md)。
-- **怎样描述任务？** 例如：“根据当前订单接口源码画创建订单的时序图，包含校验失败和异步通知，输出离线 HTML。”
-- **能否只要 Mermaid？** 可以，明确要求片段或 Markdown 即可。
-- **如何搬移？** 同时复制顶层 `.html` 与 `sequence-diagrams/` 模块目录。示例和运行资源均在技能内，单独复制技能也可生成。
-- **支持 IDEA 源码跳转吗？** 支持新版 Diagram Source Navigator。参与者上下两端与消息中的真实方法均可跳转，链式调用独立链接；映射包含完整类名、精确签名与原文哈希，变更源码后须同步映射。IDE 未导入依赖会 not_found，同名多模块类需要明确选择候选；只有 opened 才计成功。
+- **如何开始做符号映射？** 用生成器的 `--init-source-map` 提取本次图源的哈希、参与者和消息，再填写实际目标。
+- **如何使用？** 按[安装文档](../installation.md)调用。交付格式可指定为 Mermaid、Markdown 或离线 HTML。
 
 ## It's working if
 
-图中每条消息的方向、先后与同步/异步语义有依据，分支和错误处理清楚；所有图能渲染、切换和缩放，导出 SVG 可独立查看。产物迁移后仍能离线打开，Markdown 与页面的图源码一致。
+每条消息的方向、时点和同步语义都有依据，场景之间有明确衔接，已映射的方法可在页面定位。
 
 ## Where it fits
 
-这是 `engineering` 分类的正式技能，支持自动发现和显式调用。[SKILL.md](../../skills/engineering/render-sequence-diagrams/SKILL.md) 维护执行步骤，规范、模板、脚本和运行库均在该技能目录内；它与类图技能各自独立分发。
+[技能入口](../../skills/engineering/render-sequence-diagrams/SKILL.md)包含生成及验证步骤。只关心单条处理路径的判断规则时用[流程图](render-flowcharts.md)。

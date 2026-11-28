@@ -55,6 +55,30 @@ def navigation_items(source):
     return actors, messages
 
 
+def source_hash(source):
+    return hashlib.sha256(source.encode('utf-8')).hexdigest()
+
+
+def init_source_map(source, output):
+    source, output = Path(source), Path(output)
+    if output.resolve().is_relative_to(SKILL_ROOT):
+        raise ValueError('Write the source map outside the skill directory.')
+    scenes = []
+    for diagram in extract_diagrams(source.read_text(encoding='utf-8')):
+        actors, messages = navigation_items(diagram['source'])
+        scenes.append({
+            'sourceHash': source_hash(diagram['source']),
+            'participants': {actor: {'label': label, 'links': []} for actor, label in actors.items()},
+            'messages': [{'from': sender, 'to': receiver, 'label': label, 'links': []}
+                         for sender, receiver, label in messages],
+        })
+    content = json.dumps({'symbols': {}, 'diagrams': scenes}, ensure_ascii=False, indent=2) + '\n'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open('x', encoding='utf-8') as target:
+        target.write(content)
+    return len(scenes)
+
+
 def validate_mapping(diagrams, mapping, required):
     symbols = mapping.get('symbols', {})
     scenes = mapping.get('diagrams', [])
@@ -67,7 +91,7 @@ def validate_mapping(diagrams, mapping, required):
             if not re.fullmatch(r'[A-Za-z_$][\w$]*', method.get('methodName', '')) or not isinstance(method.get('parameterTypes'), list) or any(not isinstance(t, str) or not t or '...' in t for t in method['parameterTypes']):
                 raise ValueError('Methods require verified erased parameterTypes.')
     for diagram, scene in zip(diagrams, scenes):
-        if scene['sourceHash'] != hashlib.sha256(diagram['source'].encode()).hexdigest():
+        if scene['sourceHash'] != source_hash(diagram['source']):
             raise ValueError('Stale source mapping: ' + diagram['title'])
         actors, messages = navigation_items(diagram['source'])
         missing = actors.keys() - scene['participants'].keys()
@@ -199,12 +223,21 @@ def main():
     parser.add_argument('source', type=Path)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--title')
-    parser.add_argument('--source-map', type=Path)
+    maps = parser.add_mutually_exclusive_group()
+    maps.add_argument('--source-map', type=Path)
+    maps.add_argument('--init-source-map', type=Path, metavar='PATH',
+                      help='Write an unfilled source map to a new JSON file and exit.')
     parser.add_argument('--require-source-links', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     try:
         source = args.source.resolve()
+        if args.init_source_map is not None:
+            if args.output is not None or args.title is not None or args.require_source_links or args.overwrite:
+                parser.error('--init-source-map cannot be used with HTML generation options.')
+            count = init_source_map(source, args.init_source_map)
+            print(f'Created {args.init_source_map.resolve()} ({count} diagrams). Fill in source links or exclusion reasons.')
+            return
         output_root = source.parent.parent if source.parent.name == 'sequence-diagrams' else source.parent
         output = (args.output or output_root / source.with_suffix('.html').name).resolve()
         count = generate(args.source, output, args.title, args.overwrite, args.source_map, args.require_source_links)

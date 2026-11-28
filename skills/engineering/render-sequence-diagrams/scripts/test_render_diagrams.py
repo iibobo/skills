@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -44,6 +46,40 @@ class SequenceRendererTest(unittest.TestCase):
         self.assertEqual(self.output.read_bytes(), before)
         renderer.generate(self.source, self.output, title='Changed', overwrite=True)
         self.assertIn('<title>Changed</title>', self.output.read_text())
+
+    def test_source_map_template_round_trips_and_protects_an_existing_map(self):
+        self.source.write_text(
+            '```mermaid\nsequenceDiagram\n participant A as nowrap: Worker\n'
+            ' A->>B: call()\n B-->>A: done\n```\n',
+            encoding='utf-8',
+        )
+        mapping_path = self.root / 'symbols.json'
+        command = [sys.executable, str(SPEC.origin), str(self.source), '--init-source-map', str(mapping_path)]
+        subprocess.run(command, check=True, capture_output=True)
+        mapping = json.loads(mapping_path.read_text(encoding='utf-8'))
+        scene, = mapping['diagrams']
+        self.assertEqual(mapping['symbols'], {})
+        self.assertEqual(scene['participants'], {
+            'A': {'label': 'Worker', 'links': []},
+            'B': {'label': 'B', 'links': []},
+        })
+        self.assertEqual(scene['messages'], [
+            {'from': 'A', 'to': 'B', 'label': 'call()', 'links': []},
+            {'from': 'B', 'to': 'A', 'label': 'done', 'links': []},
+        ])
+        with self.assertRaisesRegex(ValueError, 'links or an explicit exclusion reason'):
+            renderer.generate(self.source, self.output, source_map=mapping_path)
+        self.assertFalse(self.output.exists())
+
+        mapping['symbols']['Worker'] = {'className': 'example.Worker'}
+        scene['participants']['A']['links'].append({'symbol': 'Worker', 'text': 'Worker'})
+        for item in [scene['participants']['B'], *scene['messages']]:
+            item['reason'] = 'External boundary or data'
+        mapping_path.write_text(json.dumps(mapping), encoding='utf-8')
+        filled = mapping_path.read_bytes()
+        self.assertNotEqual(subprocess.run(command, capture_output=True).returncode, 0)
+        self.assertEqual(mapping_path.read_bytes(), filled)
+        self.assertEqual(renderer.generate(self.source, self.output, source_map=mapping_path), 1)
 
     def test_user_text_cannot_escape_json_or_trigger_template_replacement(self):
         self.source.write_text('# <标题> @@ASSETS@@\n```mermaid\nsequenceDiagram\n A->>B: </script><script>alert(1)</script>\n```\n')

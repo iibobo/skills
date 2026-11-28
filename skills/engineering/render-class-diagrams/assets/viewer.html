@@ -205,7 +205,7 @@ document.getElementById('export').onclick=()=>{
   const svg=canvas.querySelector('svg').cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width',naturalWidth);svg.setAttribute('height',naturalHeight);svg.style.maxWidth='none';svg.style.backgroundColor='#ffffff';
   const blob=new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n',new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='class-diagram-'+(selected+1)+'.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请确认 assets 文件夹与本页面保存在同一目录。';document.body.dataset.renderError='true';}
+if(typeof mermaid==='undefined'){status.textContent='Mermaid.js 加载失败，请保留 HTML 与 class-diagrams/ 模块目录的相对位置。';document.body.dataset.renderError='true';}
 else{mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',themeCSS:'.methods-group text,.methods-group tspan{font-weight:600 !important;}path.relation{stroke-width:2px !important;}',htmlLabels:false,fontFamily:'Arial, "PingFang SC", "Microsoft YaHei", sans-serif',themeVariables:{background:'#ffffff',primaryColor:'#dcd0f3',primaryTextColor:'#292735',primaryBorderColor:'#8055ba',secondaryColor:'#ffffde',tertiaryColor:'#ffffff',lineColor:'#333333',textColor:'#292735',mainBkg:'#dcd0f3',nodeBorder:'#8055ba',noteBkgColor:'#fff5ad',noteBorderColor:'#b5a842',noteTextColor:'#333333',fontSize:'16px'},class:{useMaxWidth:false,hideEmptyMembersBox:false}});select(0);}
 </script>
 </body>

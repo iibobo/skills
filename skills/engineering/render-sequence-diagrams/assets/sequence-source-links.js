@@ -26,7 +26,7 @@ function linkSequenceSources(svg, index) {
         link.append(title,document.createTextNode(entry.text));
         link.addEventListener('click',event=>{event.preventDefault();if(document.documentElement.dataset.ideaBridgeReady==='true')return;
           let hint=document.getElementById('source-navigation-hint');if(!hint){hint=document.createElement('div');hint.id='source-navigation-hint';hint.setAttribute('role','status');hint.style.cssText='position:fixed;bottom:16px;left:16px;padding:12px;background:#f0fff4;border:2px solid #39ff14;border-radius:6px;z-index:9999;max-width:85vw';document.body.append(hint);}
-          hint.textContent='请通过 IDEA 的 Tools → Open Class Diagram with Source Navigation… 打开此 HTML，并使用支持时序图的新版本插件。';});
+          hint.textContent='请用支持时序图的 Diagram Source Navigator 在 IDEA 中打开此 HTML。';});
         link.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();link.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));}});
         node.replaceWith(document.createTextNode(before),link,document.createTextNode(after));
         break;
